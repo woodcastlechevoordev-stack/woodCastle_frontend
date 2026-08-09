@@ -2,10 +2,11 @@
 
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
+import { getTopLevelCategories, nestCategories } from "@/lib/categories";
 import type { Category } from "@/lib/types";
 import { categoryFormSchema } from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -23,10 +24,18 @@ export default function AdminCategoriesPage() {
       name: "",
       slug: "",
       description: "",
+      parentId: "",
       metaTitle: "",
       metaDescription: "",
     },
   });
+
+  const tree = useMemo(() => nestCategories(categories), [categories]);
+  const mains = useMemo(() => getTopLevelCategories(tree), [tree]);
+  const parentOptions = useMemo(
+    () => mains.filter((c) => !editing || c.id !== editing.id),
+    [mains, editing]
+  );
 
   async function load() {
     const res = await fetch("/api/admin/categories");
@@ -45,6 +54,7 @@ export default function AdminCategoriesPage() {
       name: "",
       slug: "",
       description: "",
+      parentId: "",
       metaTitle: "",
       metaDescription: "",
     });
@@ -57,7 +67,8 @@ export default function AdminCategoriesPage() {
     form.reset({
       name: cat.name,
       slug: cat.slug,
-      description: "",
+      description: cat.description || "",
+      parentId: cat.parentId || "",
       metaTitle: cat.metaTitle || "",
       metaDescription: cat.metaDescription || "",
     });
@@ -69,6 +80,8 @@ export default function AdminCategoriesPage() {
     const payload = {
       name: values.name,
       slug: values.slug,
+      description: values.description || undefined,
+      parentId: values.parentId ? values.parentId : null,
       metaTitle: values.metaTitle,
       metaDescription: values.metaDescription,
     };
@@ -94,35 +107,88 @@ export default function AdminCategoriesPage() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="font-heading text-3xl text-brown-dark">Categories</h1>
-          <p className="mt-1 text-brown-mid">Manage collection groupings</p>
+          <p className="mt-1 text-brown-mid">
+            Manage the 11 main collections and their subcategories
+          </p>
         </div>
         <Button variant="gold" onClick={openCreate}>
           Add category
         </Button>
       </div>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2">
-        {categories.map((c) => (
+      <div className="mt-8 space-y-6">
+        {mains.map((main) => (
           <div
-            key={c.id}
+            key={main.id}
             className="rounded-xl border border-brown-light bg-white p-5 shadow-sm"
           >
-            <h2 className="font-heading text-xl text-brown-dark">{c.name}</h2>
-            <p className="mt-1 text-sm text-brown-light">/{c.slug}</p>
-            {c._count && (
-              <p className="mt-2 text-sm text-brown-mid">
-                {c._count.products} products
-              </p>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-gold">
+                  Main category
+                </p>
+                <h2 className="mt-1 font-heading text-xl text-brown-dark">{main.name}</h2>
+                <p className="mt-1 text-sm text-brown-light">/{main.slug}</p>
+                {main._count && (
+                  <p className="mt-2 text-sm text-brown-mid">
+                    {main._count.products} products
+                  </p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => openEdit(main)}
+                className="text-sm font-semibold text-gold hover:underline"
+              >
+                Edit
+              </button>
+            </div>
+
+            {(main.children?.length ?? 0) > 0 && (
+              <ul className="mt-4 grid gap-3 border-t border-brown-light/40 pt-4 sm:grid-cols-2">
+                {main.children!.map((sub) => (
+                  <li
+                    key={sub.id}
+                    className="flex items-center justify-between rounded-lg bg-cream/70 px-3 py-2.5"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-brown-dark">{sub.name}</p>
+                      <p className="text-xs text-brown-light">/{sub.slug}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => openEdit(sub)}
+                      className="text-xs font-semibold text-gold hover:underline"
+                    >
+                      Edit
+                    </button>
+                  </li>
+                ))}
+              </ul>
             )}
-            <button
-              type="button"
-              onClick={() => openEdit(c)}
-              className="mt-4 text-sm font-semibold text-gold hover:underline"
-            >
-              Edit
-            </button>
           </div>
         ))}
+
+        {mains.length === 0 && categories.length > 0 && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {categories.map((c) => (
+              <div
+                key={c.id}
+                className="rounded-xl border border-brown-light bg-white p-5 shadow-sm"
+              >
+                <h2 className="font-heading text-xl text-brown-dark">{c.name}</h2>
+                <p className="mt-1 text-sm text-brown-light">/{c.slug}</p>
+                <button
+                  type="button"
+                  onClick={() => openEdit(c)}
+                  className="mt-4 text-sm font-semibold text-gold hover:underline"
+                >
+                  Edit
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {open && (
@@ -134,6 +200,30 @@ export default function AdminCategoriesPage() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="mt-5 space-y-4">
               <Input id="cat-name" label="Name" {...form.register("name")} />
               <Input id="cat-slug" label="Slug" {...form.register("slug")} />
+              <div>
+                <label
+                  htmlFor="cat-parent"
+                  className="mb-1.5 block text-sm font-medium text-brown-dark"
+                >
+                  Parent category
+                </label>
+                <select
+                  id="cat-parent"
+                  className="w-full rounded-lg border border-brown-light bg-cream px-3 py-2.5 text-sm text-brown-dark outline-none focus:border-gold"
+                  {...form.register("parentId")}
+                >
+                  <option value="">None (main category)</option>
+                  {parentOptions.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-brown-light">
+                  Leave empty for one of the 11 main collections; pick a parent to create a
+                  subcategory.
+                </p>
+              </div>
               <Input id="cat-meta-title" label="Meta title" {...form.register("metaTitle")} />
               <Textarea
                 id="cat-meta-desc"

@@ -14,6 +14,9 @@ import {
   getProducts,
   siteInfo,
 } from "@/lib/api";
+import { brand } from "@/lib/brand";
+import { getTopLevelCategories } from "@/lib/categories";
+import { FALLBACK_IMAGE, safeImageUrl } from "@/lib/images";
 import { JsonLd, organizationJsonLd } from "@/lib/seo";
 import { format } from "date-fns";
 import Image from "next/image";
@@ -21,8 +24,7 @@ import Link from "next/link";
 
 export const revalidate = 60;
 
-const FALLBACK_HERO =
-  "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=2000&q=80";
+const FALLBACK_HERO = FALLBACK_IMAGE;
 
 export default async function HomePage() {
   const [categories, products, offers, posts] = await Promise.all([
@@ -32,6 +34,7 @@ export default async function HomePage() {
     getBlogPosts(),
   ]);
 
+  const topCategories = getTopLevelCategories(categories);
   const activeProducts = products.filter((p) => p.isActive !== false);
   const featured = activeProducts.slice(0, 8);
   const lookbookProducts = activeProducts.slice(0, 2);
@@ -39,36 +42,51 @@ export default async function HomePage() {
 
   const heroSlides: HeroSlide[] = [
     {
-      image: categories[0]?.imageUrl || FALLBACK_HERO,
-      eyebrow: siteInfo.tagline,
-      headline: siteInfo.name,
-      description:
-        "Solid wood furniture crafted to order — enquire today, furnish for a lifetime.",
+      image: FALLBACK_HERO,
+      eyebrow: siteInfo.name,
+      headline: `${brand.yearsOfLegacy} Years of Legacy · ${brand.tagline}`,
+      description: `${brand.material} furniture from ${brand.locationShort} — one of the first furniture shops in the area, trusted by ${brand.customersLabel.toLowerCase()} happy customers.`,
       ctaLabel: "Browse Collections",
-      ctaHref: categories[0] ? `/category/${categories[0].slug}` : "/contact",
+      ctaHref: topCategories[0] ? `/category/${topCategories[0].slug}` : "/about",
     },
-    ...(categories[1]
+    ...(topCategories[0]
       ? [
           {
-            image:
-              categories[1].imageUrl ||
-              "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=2000&q=80",
-            eyebrow: "Featured Collection",
-            headline: categories[1].name,
+            image: safeImageUrl(topCategories[0].imageUrl, FALLBACK_HERO),
+            eyebrow: siteInfo.name,
+            headline: topCategories[0].name,
             description:
-              categories[1].description ||
-              "Explore thoughtfully crafted pieces for every room.",
-            ctaLabel: `Shop ${categories[1].name}`,
-            ctaHref: `/category/${categories[1].slug}`,
+              topCategories[0].description ||
+              "Explore thoughtfully crafted teak pieces for every room.",
+            ctaLabel: `View ${topCategories[0].name}`,
+            ctaHref: `/category/${topCategories[0].slug}`,
+          },
+        ]
+      : []),
+    ...(topCategories[1]
+      ? [
+          {
+            image: safeImageUrl(
+              topCategories[1].imageUrl,
+              "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=2000&q=80"
+            ),
+            eyebrow: "Featured Collection",
+            headline: topCategories[1].name,
+            description:
+              topCategories[1].description ||
+              "Solid teak furniture crafted for Kerala homes.",
+            ctaLabel: `View ${topCategories[1].name}`,
+            ctaHref: `/category/${topCategories[1].slug}`,
           },
         ]
       : []),
     ...(offers[0]
       ? [
           {
-            image:
-              offers[0].bannerImage ||
-              "https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=2000&q=80",
+            image: safeImageUrl(
+              offers[0].bannerImage,
+              "https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=2000&q=80"
+            ),
             eyebrow: offers[0].discountText || "Current Offer",
             headline: offers[0].title,
             description:
@@ -77,18 +95,7 @@ export default async function HomePage() {
             ctaHref: offers[0].linkUrl || "/offers",
           },
         ]
-      : [
-          {
-            image:
-              "https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=2000&q=80",
-            eyebrow: "Craftsmanship",
-            headline: "Built with grain and purpose",
-            description:
-              "Kiln-dried hardwoods, traditional joinery, and finishes that honour the timber.",
-            ctaLabel: "Our Story",
-            ctaHref: "/about",
-          },
-        ]),
+      : []),
   ];
 
   return (
@@ -103,13 +110,13 @@ export default async function HomePage() {
           <h2 className="mt-3 font-heading text-3xl sm:text-4xl">Our collections</h2>
           <div className="section-divider mx-auto mt-6 max-w-xs" />
         </div>
-        {categories.length === 0 ? (
+        {topCategories.length === 0 ? (
           <p className="text-center text-brown-mid">
             Collections will appear here once added in the admin panel.
           </p>
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {categories.slice(0, 6).map((c) => (
+            {topCategories.slice(0, 6).map((c) => (
               <CategoryCard key={c.id} category={c} />
             ))}
           </div>
@@ -163,10 +170,7 @@ export default async function HomePage() {
                 >
                   <div className="relative aspect-[21/9] sm:aspect-[2.2/1]">
                     <Image
-                      src={
-                        offer.bannerImage ||
-                        "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=80"
-                      }
+                      src={safeImageUrl(offer.bannerImage, FALLBACK_HERO)}
                       alt={offer.title}
                       fill
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -191,7 +195,7 @@ export default async function HomePage() {
         </section>
       )}
 
-      <SignatureCollections categories={categories} />
+      <SignatureCollections categories={topCategories} />
 
       <Testimonials />
 

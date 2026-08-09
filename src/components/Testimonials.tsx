@@ -1,21 +1,21 @@
 const testimonials = [
   {
     quote:
-      "Our dining table arrived beautifully finished — the grain is stunning and the joinery feels rock solid.",
+      "Our teak dining table arrived beautifully finished — the grain is stunning and the joinery feels rock solid. True Chevoor craftsmanship.",
     name: "Ananya Krishnan",
+    place: "Thrissur",
+  },
+  {
+    quote:
+      "From enquiry to delivery, the team was patient and clear. After 44 years in the trade, it shows — the wardrobe fit our room perfectly.",
+    name: "Rahul Menon",
     place: "Kochi",
   },
   {
     quote:
-      "From enquiry to delivery, the team was patient and clear. The wardrobe fit our room perfectly.",
-    name: "Rahul Menon",
-    place: "Bengaluru",
-  },
-  {
-    quote:
-      "Finally furniture that feels like it will last. Warm finish, honest wood — exactly what we wanted.",
+      "Finally furniture that feels like it will last. 100% teak, warm finish, honest wood — exactly what we wanted from Kerala's best.",
     name: "Meera Joseph",
-    place: "Thrissur",
+    place: "Chevoor",
   },
 ] as const;
 

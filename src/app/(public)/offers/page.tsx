@@ -1,4 +1,5 @@
 import { getActiveOffers } from "@/lib/api";
+import { FALLBACK_IMAGE, safeImageUrl } from "@/lib/images";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -40,10 +41,7 @@ export default async function OffersPage() {
               <div className="grid lg:grid-cols-2">
                 <div className="relative aspect-[16/10] lg:aspect-auto lg:min-h-[280px]">
                   <Image
-                    src={
-                      offer.bannerImage ||
-                      "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=80"
-                    }
+                    src={safeImageUrl(offer.bannerImage, FALLBACK_IMAGE)}
                     alt={offer.title}
                     fill
                     className="object-cover"

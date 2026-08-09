@@ -14,6 +14,7 @@ import {
   Tag,
   X,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -53,16 +54,30 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex h-16 items-center justify-between px-5">
-          <Link href="/admin" className="font-heading text-xl">
-            {siteInfo.name}
+        <div className="flex h-[4.75rem] items-center justify-between border-b border-brown-light/40 bg-white px-4">
+          <Link href="/admin" className="inline-flex min-w-0 items-center">
+            <Image
+              src="/brand/logo.png"
+              alt={`${siteInfo.name} Admin`}
+              width={865}
+              height={479}
+              priority
+              className="h-12 w-auto max-w-[168px] object-contain object-left"
+            />
           </Link>
-          <button type="button" className="lg:hidden" onClick={() => setOpen(false)}>
+          <button
+            type="button"
+            className="shrink-0 rounded-lg p-1.5 text-brown-dark lg:hidden"
+            onClick={() => setOpen(false)}
+            aria-label="Close menu"
+          >
             <X size={20} />
           </button>
         </div>
-        <p className="px-5 text-xs uppercase tracking-widest text-gold-light/70">Admin</p>
-        <nav className="mt-4 space-y-1 px-3">
+        <p className="px-5 pt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-gold-light/70">
+          Admin
+        </p>
+        <nav className="mt-2 space-y-1 px-3">
           {links.map((link) => {
             const active =
               link.href === "/admin"

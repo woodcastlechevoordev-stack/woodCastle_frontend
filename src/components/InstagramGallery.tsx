@@ -1,20 +1,16 @@
+import { FALLBACK_IMAGE, safeImageUrl } from "@/lib/images";
 import type { Product } from "@/lib/types";
 import Image from "next/image";
 import Link from "next/link";
 
-const PLACEHOLDER =
-  "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=600&q=80";
-
 export function InstagramGallery({ products }: { products: Product[] }) {
   const items = products
-    .flatMap((p) =>
-      (p.images?.length ? p.images.slice(0, 1) : [PLACEHOLDER]).map((image) => ({
-        id: p.id,
-        slug: p.slug,
-        name: p.name,
-        image,
-      }))
-    )
+    .map((p) => ({
+      id: p.id,
+      slug: p.slug,
+      name: p.name,
+      image: safeImageUrl(p.images?.[0], FALLBACK_IMAGE),
+    }))
     .slice(0, 6);
 
   if (items.length === 0) return null;

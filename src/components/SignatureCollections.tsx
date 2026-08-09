@@ -1,13 +1,11 @@
 "use client";
 
+import { FALLBACK_IMAGE, safeImageUrl } from "@/lib/images";
 import type { Category } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-
-const PLACEHOLDER =
-  "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=80";
 
 export function SignatureCollections({ categories }: { categories: Category[] }) {
   const items = categories.slice(0, 5);
@@ -53,7 +51,7 @@ export function SignatureCollections({ categories }: { categories: Category[] })
           <div className="relative min-h-[320px] overflow-hidden rounded-xl border border-brown-light/50 lg:min-h-full">
             <Image
               key={current.id}
-              src={current.imageUrl || PLACEHOLDER}
+              src={safeImageUrl(current.imageUrl, FALLBACK_IMAGE)}
               alt={current.name}
               fill
               className="object-cover transition-opacity duration-500"

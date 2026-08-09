@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
+import { safeImageUrl } from "@/lib/images";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
@@ -44,7 +45,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
           aria-hidden={i !== index}
         >
           <Image
-            src={s.image}
+            src={safeImageUrl(s.image)}
             alt=""
             fill
             priority={i === 0}

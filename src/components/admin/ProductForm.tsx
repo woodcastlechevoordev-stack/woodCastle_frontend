@@ -2,15 +2,36 @@
 
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
+import { nestCategories } from "@/lib/categories";
 import type { Category } from "@/lib/types";
 import { productFormSchema } from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 type Values = z.infer<typeof productFormSchema>;
+
+function categoryOptions(flat: Category[]): { id: string; label: string }[] {
+  const tree = nestCategories(flat);
+  const options: { id: string; label: string }[] = [];
+  for (const main of tree) {
+    if (main.children?.length) {
+      for (const sub of main.children) {
+        options.push({ id: sub.id, label: `${main.name} › ${sub.name}` });
+      }
+      options.push({ id: main.id, label: `${main.name} (all)` });
+    } else {
+      options.push({ id: main.id, label: main.name });
+    }
+  }
+  // Fallback if nesting produced nothing useful
+  if (options.length === 0) {
+    return flat.map((c) => ({ id: c.id, label: c.name }));
+  }
+  return options;
+}
 
 export function ProductForm({
   defaultValues,
@@ -42,6 +63,11 @@ export function ProductForm({
       ...defaultValues,
     },
   });
+
+  const categorySelectOptions = useMemo(
+    () => categoryOptions(categories),
+    [categories]
+  );
 
   useEffect(() => {
     fetch("/api/admin/categories")
@@ -166,9 +192,9 @@ export function ProductForm({
             className="w-full rounded-lg border border-brown-light bg-white px-4 py-3 text-base text-brown-dark outline-none focus:border-gold focus:ring-1 focus:ring-gold"
             {...form.register("categoryId")}
           >
-            {categories.map((c) => (
+            {categorySelectOptions.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.name}
+                {c.label}
               </option>
             ))}
           </select>

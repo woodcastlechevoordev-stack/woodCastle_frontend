@@ -1,14 +1,13 @@
 import { formatPrice } from "@/lib/api";
+import { FALLBACK_IMAGE, safeImageUrls } from "@/lib/images";
 import type { Product } from "@/lib/types";
 import Image from "next/image";
 import Link from "next/link";
 
-const PLACEHOLDER =
-  "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80";
-
 export function ProductCard({ product }: { product: Product }) {
-  const primary = product.images?.[0] || PLACEHOLDER;
-  const secondary = product.images?.[1];
+  const images = safeImageUrls(product.images, FALLBACK_IMAGE);
+  const primary = images[0];
+  const secondary = images[1];
   const categoryName = product.category?.name;
 
   return (

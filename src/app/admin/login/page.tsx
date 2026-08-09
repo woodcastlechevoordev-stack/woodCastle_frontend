@@ -2,9 +2,9 @@
 
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { siteInfo } from "@/lib/api";
 import { loginSchema, totpSchema } from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -75,8 +75,17 @@ function LoginForm() {
     <div className="flex min-h-screen items-center justify-center bg-cream px-4">
       <div className="w-full max-w-md rounded-xl border border-brown-light bg-white p-8 shadow-sm">
         <div className="text-center">
-          <p className="font-heading text-3xl text-brown-dark">{siteInfo.name}</p>
-          <p className="mt-1 text-sm text-brown-mid">Admin Panel</p>
+          <Image
+            src="/brand/logo.png"
+            alt="Woodcastle Furniture"
+            width={865}
+            height={479}
+            priority
+            className="mx-auto h-16 w-auto object-contain sm:h-20"
+          />
+          <p className="mt-4 text-sm font-medium uppercase tracking-widest text-brown-mid">
+            Admin Panel
+          </p>
           <div className="section-divider mx-auto mt-5 max-w-[120px]" />
         </div>
 

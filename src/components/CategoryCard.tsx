@@ -1,9 +1,7 @@
+import { FALLBACK_IMAGE, safeImageUrl } from "@/lib/images";
 import type { Category } from "@/lib/types";
 import Image from "next/image";
 import Link from "next/link";
-
-const PLACEHOLDER =
-  "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=800&q=80";
 
 export function CategoryCard({ category }: { category: Category }) {
   return (
@@ -12,7 +10,7 @@ export function CategoryCard({ category }: { category: Category }) {
       className="group relative block aspect-[4/3] overflow-hidden rounded-xl"
     >
       <Image
-        src={category.imageUrl || PLACEHOLDER}
+        src={safeImageUrl(category.imageUrl, FALLBACK_IMAGE)}
         alt={category.name}
         fill
         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"

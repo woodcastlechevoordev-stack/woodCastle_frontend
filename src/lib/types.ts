@@ -6,6 +6,10 @@ export type Category = {
   imageUrl: string | null;
   metaTitle: string | null;
   metaDescription: string | null;
+  /** Null/undefined = top-level (one of the 11 main categories). */
+  parentId?: string | null;
+  parent?: Pick<Category, "id" | "name" | "slug"> | null;
+  children?: Category[];
   _count?: { products: number };
 };
 
@@ -98,4 +102,49 @@ export type SiteInfo = {
   whatsapp: string;
   mapEmbedUrl: string;
   establishedYear: string;
+};
+
+export type ImportAction = "create" | "update";
+
+export type ImportPreviewError = {
+  row: number;
+  sheet: string;
+  field?: string;
+  message: string;
+};
+
+export type ImportPreviewCategory = {
+  rowNumber: number;
+  name: string;
+  slug: string;
+  action: ImportAction;
+  existingId?: string | null;
+};
+
+export type ImportPreviewProduct = {
+  rowNumber: number;
+  name: string;
+  slug: string;
+  categoryName: string;
+  price?: number | null;
+  action: ImportAction;
+  existingId?: string | null;
+};
+
+export type ImportPreviewSummary = {
+  categoriesToCreate: number;
+  categoriesToUpdate: number;
+  productsToCreate: number;
+  productsToUpdate: number;
+  errorCount: number;
+};
+
+export type ImportPreviewResult = {
+  importId: string;
+  fileName: string;
+  expiresAt: string;
+  summary: ImportPreviewSummary;
+  categories: ImportPreviewCategory[];
+  products: ImportPreviewProduct[];
+  errors: ImportPreviewError[];
 };

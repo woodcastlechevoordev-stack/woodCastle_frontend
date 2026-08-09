@@ -1,10 +1,13 @@
 import { TrustFeatures } from "@/components/TrustFeatures";
+import { SiteLogo } from "@/components/SiteLogo";
 import { getCategories, siteInfo } from "@/lib/api";
+import { brand } from "@/lib/brand";
+import { getTopLevelCategories } from "@/lib/categories";
 import { Facebook, Instagram, Phone, Mail } from "lucide-react";
 import Link from "next/link";
 
 export async function Footer() {
-  const categories = await getCategories();
+  const categories = getTopLevelCategories(await getCategories());
 
   return (
     <footer className="bg-brown-dark text-cream">
@@ -13,11 +16,9 @@ export async function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <p className="font-heading text-2xl">{siteInfo.name}</p>
-            <p className="mt-3 text-sm text-cream/70">{siteInfo.tagline}</p>
-            <p className="mt-4 text-sm text-cream/60">
-              Premium solid wood furniture, crafted to order for homes that last.
-            </p>
+            <SiteLogo variant="footer" />
+            <p className="mt-4 text-sm text-cream/70">{siteInfo.tagline}</p>
+            <p className="mt-3 text-sm text-cream/60">{brand.originStory}</p>
             <div className="mt-5 flex gap-3">
               <a
                 href="https://instagram.com"
@@ -122,7 +123,8 @@ export async function Footer() {
         </div>
 
         <div className="section-divider mt-12 opacity-40" />
-        <p className="mt-6 text-center text-xs text-cream/50">
+        <p className="mt-6 text-center text-sm text-cream/70">{brand.legacyLine}</p>
+        <p className="mt-3 text-center text-xs text-cream/50">
           © {new Date().getFullYear()} {siteInfo.name}. All rights reserved.
         </p>
       </div>

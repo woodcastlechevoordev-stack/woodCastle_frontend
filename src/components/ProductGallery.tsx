@@ -1,5 +1,6 @@
 "use client";
 
+import { FALLBACK_IMAGE, safeImageUrls } from "@/lib/images";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { useState } from "react";
@@ -12,12 +13,7 @@ export function ProductGallery({
   name: string;
 }) {
   const [active, setActive] = useState(0);
-  const list =
-    images.length > 0
-      ? images
-      : [
-          "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=1200&q=80",
-        ];
+  const list = safeImageUrls(images, FALLBACK_IMAGE);
   const current = list[active] ?? list[0];
 
   return (
