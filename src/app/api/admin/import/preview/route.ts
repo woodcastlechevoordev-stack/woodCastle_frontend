@@ -2,38 +2,21 @@ import { getApiUrl } from "@/lib/backend";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function proxyToBackend(
-  req: NextRequest,
-  backendPath: string,
-  init?: RequestInit
-) {
+export async function POST(req: NextRequest) {
   try {
     const jar = await cookies();
     const token = jar.get("admin_token")?.value;
-
-    const url = `${getApiUrl()}${backendPath}`;
-    const hasBody =
-      init?.body !== undefined || (req.method !== "GET" && req.method !== "HEAD");
-
-    let body: string | undefined;
-    if (hasBody && init?.body === undefined) {
-      try {
-        body = await req.text();
-      } catch {
-        body = undefined;
-      }
-    } else if (typeof init?.body === "string") {
-      body = init.body;
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const res = await fetch(url, {
-      method: init?.method || req.method,
+    const formData = await req.formData();
+    const res = await fetch(`${getApiUrl()}/api/admin/import/preview`, {
+      method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...(init?.headers || {}),
+        Authorization: `Bearer ${token}`,
       },
-      body: body || undefined,
+      body: formData,
       cache: "no-store",
     });
 

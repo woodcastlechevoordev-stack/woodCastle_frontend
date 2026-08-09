@@ -21,9 +21,14 @@ export default async function AdminProductsPage() {
           <h1 className="font-heading text-3xl text-brown-dark">Products</h1>
           <p className="mt-1 text-brown-mid">{products.length} items in catalogue</p>
         </div>
-        <Link href="/admin/products/new">
-          <Button variant="gold">Add product</Button>
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link href="/admin/products/import">
+            <Button variant="outline">Import from Sheet</Button>
+          </Link>
+          <Link href="/admin/products/new">
+            <Button variant="gold">Add product</Button>
+          </Link>
+        </div>
       </div>
 
       <div className="mt-8 overflow-x-auto rounded-xl border border-brown-light bg-white shadow-sm">

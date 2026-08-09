@@ -48,6 +48,7 @@ export const categoryFormSchema = z.object({
   name: z.string().min(2),
   slug: z.string().min(2),
   description: z.string().optional(),
+  parentId: z.string().optional().or(z.literal("")),
   metaTitle: z.string().min(2),
   metaDescription: z.string().min(10),
 });

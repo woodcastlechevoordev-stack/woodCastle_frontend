@@ -6,7 +6,7 @@ import { Mail, MapPin, Phone } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Contact Us",
-  description: `Visit Woodcastle at ${siteInfo.address}, ${siteInfo.city}. Call ${siteInfo.phone} or send us a message.`,
+  description: `Visit Woodcastle in Chevoor, Thrissur — 44 years of teak furniture. Call ${siteInfo.phone} or send us a message.`,
   alternates: { canonical: "/contact" },
 };
 

@@ -1,24 +1,23 @@
+import { formatPrice } from "@/lib/api";
+import { FALLBACK_IMAGE, safeImageUrl } from "@/lib/images";
 import type { Product } from "@/lib/types";
 import Image from "next/image";
 import Link from "next/link";
-import { formatPrice } from "@/lib/api";
-
-const PLACEHOLDER =
-  "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=80";
 
 export function LookbookBanner({ products }: { products: Product[] }) {
   const callouts = products.slice(0, 2);
   if (callouts.length === 0) return null;
 
+  const hero = safeImageUrl(
+    callouts[0]?.images?.[1] || callouts[0]?.images?.[0],
+    FALLBACK_IMAGE
+  );
+
   return (
     <section className="relative overflow-hidden">
       <div className="relative min-h-[70vh] lg:min-h-[75vh]">
         <Image
-          src={
-            callouts[0]?.images?.[1] ||
-            callouts[0]?.images?.[0] ||
-            PLACEHOLDER
-          }
+          src={hero}
           alt="Woodcastle lookbook"
           fill
           className="object-cover"
@@ -36,7 +35,7 @@ export function LookbookBanner({ products }: { products: Product[] }) {
           </p>
 
           <ul className="mt-8 flex flex-wrap gap-4">
-            {callouts.map((product, i) => (
+            {callouts.map((product) => (
               <li key={product.id}>
                 <Link
                   href={`/product/${product.slug}`}
@@ -44,7 +43,7 @@ export function LookbookBanner({ products }: { products: Product[] }) {
                 >
                   <span className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg">
                     <Image
-                      src={product.images?.[0] || PLACEHOLDER}
+                      src={safeImageUrl(product.images?.[0], FALLBACK_IMAGE)}
                       alt={product.name}
                       fill
                       className="object-cover"
@@ -53,12 +52,12 @@ export function LookbookBanner({ products }: { products: Product[] }) {
                   </span>
                   <span>
                     <span className="block text-[10px] font-semibold uppercase tracking-widest text-gold-light">
-                      Spot {String(i + 1).padStart(2, "0")}
+                      Featured
                     </span>
-                    <span className="mt-0.5 block font-heading text-lg text-cream group-hover:text-gold">
+                    <span className="mt-0.5 block font-heading text-sm text-cream group-hover:text-gold">
                       {product.name}
                     </span>
-                    <span className="text-sm font-semibold text-gold">
+                    <span className="mt-0.5 block text-xs text-cream/70">
                       {formatPrice(product.price)}
                     </span>
                   </span>

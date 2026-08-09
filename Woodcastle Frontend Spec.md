@@ -58,12 +58,12 @@ This section maps GearO's layout structure onto Woodcastle's existing pages/feat
 ### 3.1 Header
 
 - Slim **top utility bar**: left — a short trust line (e.g. "Handcrafted Wood Furniture Since [year]"); right — About / Contact / Store Location links (only if applicable)
-- **Main header row**: logo (center or left), primary nav with category **mega-menu dropdown** (categories shown with subcategories, matching GearO's dropdown-with-thumbnails style — image + name per category), search icon, and an "Enquire Now" quick-access icon/button in place of GearO's wishlist/cart icons
+- **Main header row**: logo (center or left), primary nav with category **mega-menu dropdown** — showing Woodcastle's actual 11 main categories (Sofa & Sofa Sets, Chairs, Tables, Dining Furniture, Bedroom Furniture, Living Room Furniture, Storage Furniture, Office Furniture, Outdoor Furniture, Kids Furniture, Home Décor & Accessories), each expanding to its subcategories on hover/tap (matching GearO's dropdown-with-thumbnails style), search icon, and an "Enquire Now" quick-access icon/button in place of GearO's wishlist/cart icons
 - Mobile: hamburger menu opening a full-screen/off-canvas nav, same category structure collapsed into an accordion
 
 ### 3.2 Homepage Section Order
 
-1. **Hero carousel** — multi-slide banner (product/category imagery, headline, short line, one CTA button linking to a category)
+1. **Hero carousel** — multi-slide banner (product/category imagery, headline, short line, one CTA button linking to a category); one slide anchors on the brand positioning itself — "44 Years of Legacy · Kerala's Best Furniture" — rather than only product imagery
 2. **Category grid** — image tile per category (5–6 tiles), matching GearO's "Browse Categories" banner grid; links to `/category/[slug]`
 3. **Featured products grid** — "Our Picks For You" equivalent (e.g. "Featured Furniture"): product cards in a 4-column desktop grid, pulling `isActive` products, most recent or manually curated
 4. **Large lookbook-style banner** — one big lifestyle image with 1-2 product callouts overlaid, linking to product detail pages
@@ -72,12 +72,13 @@ This section maps GearO's layout structure onto Woodcastle's existing pages/feat
 7. **Testimonials** — simple curated quote cards (customer name, short quote); since there's no review/rating system in scope, this is **static content hardcoded in the frontend**, not admin-editable and not backed by a new database model — avoids adding a review/testimonial-management feature that wasn't requested
 8. **Blog preview** — 3 most recent posts, card layout (image, category tag, date, title, excerpt, "Read More"), matching GearO's "News Insight" section
 9. **Instagram-style gallery strip** — a simple image row using existing product images (view product on click), no separate Instagram integration
-10. **Trust/feature icon row** (footer-adjacent) — 4 short value props (e.g. "Handcrafted Quality," "Pan-India Delivery," "Dedicated Support," "Custom Options Available") replacing GearO's shipping/returns/support/discount icons with Woodcastle-appropriate claims
+10. **Trust/stat row** (footer-adjacent) — the actual brand credibility stats from section 3.8: **44 Years of Legacy · 100% Teak Wood · 10 Lakh+ Happy Customers · Chevoor, Thrissur Since [founding year]** — shown as large numbers with short labels, not generic service icons
 
 ### 3.3 Category Listing Page (`/category/[slug]`)
 
-- Breadcrumb row
-- Optional left sidebar or top filter bar (material, price range) — filtering is client-side/query-param based against the existing `/api/categories/:slug/products` endpoint, no new backend filtering logic required for Phase 1 unless the client wants server-side filters
+- Since Woodcastle's catalog is two-level (11 main categories, each with several subcategories — see the category taxonomy in the backend spec), a main category page (e.g. `/category/chairs`) shows a subcategory tile grid at the top (Dining Chair, Arm Chair, Lounge Chair, etc.) before the product grid, so users can narrow down; a subcategory page (e.g. `/category/dining-chair`) goes straight to the product grid, since it's already the leaf level
+- Breadcrumb row (Home → Chairs → Dining Chair)
+- Optional left sidebar or top filter bar (price range) — filtering is client-side/query-param based against the existing `/api/categories/:slug/products` endpoint, no new backend filtering logic required for Phase 1 unless the client wants server-side filters
 - Product grid (same card component as homepage), with "Load More" pagination button (GearO pattern) rather than numbered pages — cleaner on mobile
 
 ### 3.4 Product Card Component
@@ -104,14 +105,36 @@ Matches GearO's card structure minus commerce actions:
 
 ### 3.7 Footer
 
-- Top row: 4 trust/value icons (see 3.2.10)
+- Top row: brand stat row (see 3.2.10 / 3.8)
 - Multi-column footer: **Information** (About, Blog, Store Location if applicable), **Customer Services** (Contact Us, Terms & Conditions), and a **contact block** (phone, email/WhatsApp)
+- Short legacy line above the copyright row, e.g. "44 Years of Trusted Craftsmanship — Chevoor, Thrissur, Kerala"
 - Newsletter signup bar is **optional** — only include if the client wants an email list; not in original requirements, so flagged here rather than assumed
 - Social icons row
 - Copyright line
 - No payment-method icon row (no payments in Phase 1)
 
 ---
+
+### 3.8 Brand Content & Messaging
+
+Actual brand facts to use across the site (replacing placeholder copy anywhere it appears in this spec):
+
+- **44 years of experience**
+- **100% teak wood**
+- **10 lakh+ happy customers**
+- Positioned as **Kerala's best furniture** (brand tagline/positioning)
+- **One of the first furniture shops in Thrissur, Chevoor**
+
+**Where these appear:**
+
+- **Hero carousel (3.2.1):** headline built around the "44 years of experience" / "Kerala's best furniture" positioning, e.g. a tagline slide alongside the product-focused slides
+- **Trust/feature icon row (3.2.10):** replace the generic 4 value props with these actual stats as a stat strip — e.g. "44 Years of Legacy," "100% Teak Wood," "10 Lakh+ Happy Customers," "Since [founding year], Chevoor, Thrissur" — shown as large numbers/short labels rather than icons, since these are credibility stats, not service features
+- **About page (`/about`):** full brand story — the Thrissur Chevoor origin as "one of the first furniture shops" in the area, the 44-year history, and the 100% teak wood material commitment as a dedicated content block (good long-form SEO content, matching WoodenStreet's material/craft storytelling approach)
+- **Footer:** short one-line version of the legacy stat (e.g. "44 Years of Trusted Craftsmanship — Thrissur, Kerala") above the copyright line
+
+**Where this content lives:** these are static brand facts, not admin-managed dynamic data (they won't change often). They can live in the existing `StaticPage` model (`about` key) for the About page's long-form version, with the short stat-strip versions hardcoded in the homepage/footer components — no new backend model needed. If the client wants to edit these stat numbers from the admin panel later without a code change, that's a small addition to the existing `pages` module (adding a `home-highlights` key), not a new feature.
+
+
 
 ## 4. Site Structure & Pages
 
@@ -122,7 +145,7 @@ Matches GearO's card structure minus commerce actions:
 | `/` | Home — see section 3.2 for full section order | Primary keyword target ("wood furniture [city/region]"); JSON-LD `Organization` schema |
 | `/category/[slug]` | Category listing — see section 3.3 | Dynamic `metaTitle`/`metaDescription` from backend; JSON-LD `BreadcrumbList` |
 | `/product/[slug]` | Product detail — see section 3.5 | JSON-LD `Product` schema (name, image, description, price); this is the money page for SEO |
-| `/about` | About Us — brand story, craftsmanship, materials used | Long-form content block (SEO value) |
+| `/about` | About Us — 44-year brand history, Thrissur Chevoor origin story, 100% teak wood commitment (see 3.8) | Long-form content block (SEO value) |
 | `/contact` | Contact Us — address, phone, map embed, contact form | JSON-LD `LocalBusiness` schema if there's a physical store |
 | `/blog` | Blog listing — see section 3.6 | Paginated, `metaTitle`/`metaDescription` per listing |
 | `/blog/[slug]` | Blog post — see section 3.6 | JSON-LD `Article` schema |
@@ -139,6 +162,7 @@ Matches GearO's card structure minus commerce actions:
 | `/admin/products` | Product list, search/filter |
 | `/admin/products/new`, `/admin/products/[id]/edit` | Product form: name, description, price, category, images (drag-drop upload to Cloudinary), SEO fields (metaTitle/metaDescription) |
 | `/admin/categories` | Category list + create/edit modal |
+| `/admin/products/import` | Bulk import — upload the .xlsx template, review a preview of changes/errors, confirm |
 | `/admin/blog` | Blog post list |
 | `/admin/blog/new`, `/admin/blog/[id]/edit` | Rich text editor (e.g. Tiptap) for post content, cover image upload, SEO fields |
 | `/admin/offers` | Offers list + create/edit (banner image, discount text, active window) |
@@ -193,6 +217,7 @@ Matches the backend's flow exactly:
 - **Blog editor:** Tiptap or similar rich text editor, with a live SEO preview showing how the metaTitle/metaDescription will look in a Google search result snippet
 - **Enquiry inbox:** table view with status badges (new = gold, contacted = brown, closed = grey), click-through to detail view showing full enquiry + linked product + WhatsApp send status
 - **Offers:** simple banner-image + text form, with a start/end date picker so offers can be scheduled and auto-expire without the admin manually deactivating them
+- **Bulk import:** an "Import from Sheet" button on `/admin/products` opens `/admin/products/import` — a drag-and-drop upload zone for the `.xlsx` template, a "Download Template" link for first-time users, then a preview table (rows to create in gold, rows to update in brown, error rows in red with the specific message) before a final "Confirm Import" button; matches the same brown/gold visual language as the rest of the admin panel, not a generic file-upload widget
 
 ---
 

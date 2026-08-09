@@ -22,11 +22,28 @@ export const metadata: Metadata = {
     template: `%s | ${siteInfo.name}`,
   },
   description:
-    "Premium solid wood furniture crafted to order. Sofas, beds, dining sets and more from Woodcastle.",
+    "Kerala's best furniture — 44 years of 100% teak wood craftsmanship from Chevoor, Thrissur. Enquire for sofas, beds, dining sets and more.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/brand/favicon-32.png", type: "image/png", sizes: "32x32" },
+      { url: "/brand/favicon-16.png", type: "image/png", sizes: "16x16" },
+      { url: "/brand/icon.png", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
   openGraph: {
     type: "website",
     locale: "en_IN",
     siteName: siteInfo.name,
+    images: [
+      {
+        url: "/brand/logo.png",
+        width: 865,
+        height: 479,
+        alt: "Woodcastle Furniture",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",

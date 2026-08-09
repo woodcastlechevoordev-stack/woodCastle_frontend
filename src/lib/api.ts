@@ -1,4 +1,7 @@
+import { brand } from "./brand";
 import { backendFetch } from "./backend";
+import { findCategoryBySlug, nestCategories } from "./categories";
+import { safeImageUrls } from "./images";
 import type {
   BlogPost,
   Category,
@@ -12,15 +15,15 @@ export const REVALIDATE = 60;
 
 export const siteInfo: SiteInfo = {
   name: process.env.NEXT_PUBLIC_SITE_NAME || "Woodcastle",
-  tagline: process.env.NEXT_PUBLIC_SITE_TAGLINE || "Timeless Wood Furniture",
+  tagline: process.env.NEXT_PUBLIC_SITE_TAGLINE || brand.tagline,
   phone: "+91 98765 43210",
   email: "hello@woodcastle.in",
-  address: "42 Timber Lane, Industrial Estate",
-  city: "Kochi, Kerala 682001",
+  address: "Chevoor",
+  city: "Thrissur, Kerala",
   whatsapp: "919876543210",
-  establishedYear: process.env.NEXT_PUBLIC_ESTABLISHED_YEAR || "2012",
+  establishedYear: process.env.NEXT_PUBLIC_ESTABLISHED_YEAR || brand.establishedYear,
   mapEmbedUrl:
-    "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3929.0!2d76.2673!3d9.9312!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zOcKwNTUnNTIuMyJOIDc2wrAxNicwMi4zIkU!5e0!3m2!1sen!2sin!4v1",
+    "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3926.2!2d76.214!3d10.452!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTDCsDI3JzA3LjIiTiA3NsKwMTInNTAuNCJF!5e0!3m2!1sen!2sin!4v1",
 };
 
 export function getSiteUrl(): string {
@@ -38,7 +41,7 @@ export function formatPrice(amount: number | string | null | undefined): string 
 }
 
 export function productImages(product: Product): { url: string; alt: string }[] {
-  return (product.images || []).map((url, i) => ({
+  return safeImageUrls(product.images).map((url, i) => ({
     url,
     alt: `${product.name} ${i + 1}`,
   }));
@@ -59,31 +62,46 @@ function unwrapItems<T>(data: T[] | { items?: T[] } | null | undefined): T[] {
 
 export async function getCategories(): Promise<Category[]> {
   try {
-    return unwrapItems(await backendFetch<Category[] | { items: Category[] }>("/api/categories", revalidateOpt));
+    const flat = unwrapItems(
+      await backendFetch<Category[] | { items: Category[] }>("/api/categories", revalidateOpt)
+    );
+    return nestCategories(flat);
   } catch {
     return [];
   }
 }
 
 export async function getCategoryWithProducts(slug: string): Promise<
-  | (Category & { products: Product[] })
+  | (Category & {
+      products: Product[];
+      children: Category[];
+      parent: Category["parent"];
+    })
   | null
 > {
   try {
-    const data = await backendFetch<
-      | (Category & { products?: Product[]; items?: Product[] })
-      | {
-          category: Category;
-          items?: Product[];
-          products?: Product[];
-        }
-    >(`/api/categories/${slug}/products`, revalidateOpt);
+    const [data, allCategories] = await Promise.all([
+      backendFetch<
+        | (Category & { products?: Product[]; items?: Product[] })
+        | {
+            category: Category;
+            items?: Product[];
+            products?: Product[];
+          }
+      >(`/api/categories/${slug}/products`, revalidateOpt),
+      getCategories(),
+    ]);
 
     if (!data || typeof data !== "object") return null;
+
+    const fromTree = findCategoryBySlug(allCategories, slug);
 
     if ("category" in data && data.category) {
       return {
         ...data.category,
+        parentId: fromTree?.parentId ?? data.category.parentId ?? null,
+        parent: fromTree?.parent ?? data.category.parent ?? null,
+        children: fromTree?.children ?? data.category.children ?? [],
         products: unwrapItems({ items: data.items ?? data.products }),
       };
     }
@@ -91,6 +109,9 @@ export async function getCategoryWithProducts(slug: string): Promise<
     const category = data as Category & { products?: Product[]; items?: Product[] };
     return {
       ...category,
+      parentId: fromTree?.parentId ?? category.parentId ?? null,
+      parent: fromTree?.parent ?? category.parent ?? null,
+      children: fromTree?.children ?? category.children ?? [],
       products: unwrapItems({ items: category.items ?? category.products }),
     };
   } catch {
