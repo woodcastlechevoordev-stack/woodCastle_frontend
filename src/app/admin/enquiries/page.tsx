@@ -66,14 +66,13 @@ export default function AdminEnquiriesPage() {
       </div>
 
       <div className="mt-6 overflow-x-auto rounded-xl border border-brown-light bg-white shadow-sm">
-        <table className="w-full min-w-[700px] text-left text-sm">
+        <table className="w-full min-w-[560px] text-left text-sm">
           <thead className="border-b border-brown-light bg-cream/80 text-brown-mid">
             <tr>
               <th className="px-4 py-3 font-medium">Name</th>
               <th className="px-4 py-3 font-medium">Product</th>
               <th className="px-4 py-3 font-medium">Date</th>
               <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">WhatsApp</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-brown-light/40">
@@ -93,7 +92,6 @@ export default function AdminEnquiriesPage() {
                 <td className="px-4 py-3">
                   <StatusBadge status={e.status} />
                 </td>
-                <td className="px-4 py-3">{e.whatsappSent ? "Sent" : "—"}</td>
               </tr>
             ))}
           </tbody>

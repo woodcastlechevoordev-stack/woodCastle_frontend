@@ -10,11 +10,6 @@ export const enquirySchema = z.object({
   productId: z.string().min(1),
 });
 
-export const otpSchema = z.object({
-  phone: z.string().min(10),
-  code: z.string().length(6, "Enter the 6-digit code"),
-});
-
 export const contactSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Enter a valid email"),
@@ -49,6 +44,7 @@ export const categoryFormSchema = z.object({
   slug: z.string().min(2),
   description: z.string().optional(),
   parentId: z.string().optional().or(z.literal("")),
+  imageUrl: z.string().optional(),
   metaTitle: z.string().min(2),
   metaDescription: z.string().min(10),
 });
@@ -57,6 +53,7 @@ export const offerFormSchema = z.object({
   title: z.string().min(2),
   discountText: z.string().min(2),
   description: z.string().min(10),
+  bannerImage: z.string().optional(),
   startDate: z.string().min(1),
   endDate: z.string().min(1),
   active: z.boolean(),
@@ -67,6 +64,7 @@ export const blogFormSchema = z.object({
   slug: z.string().min(2),
   excerpt: z.string().min(10),
   content: z.string().min(20),
+  coverImage: z.string().optional(),
   metaTitle: z.string().min(2),
   metaDescription: z.string().min(10),
 });

@@ -1,8 +1,9 @@
+import { DeleteAction } from "@/components/admin/DeleteAction";
+import { Button } from "@/components/ui/Button";
 import { adminBackendFetch } from "@/lib/admin-api";
 import { formatPrice } from "@/lib/api";
 import type { Product } from "@/lib/types";
 import Link from "next/link";
-import { Button } from "@/components/ui/Button";
 
 export const dynamic = "force-dynamic";
 
@@ -50,12 +51,18 @@ export default async function AdminProductsPage() {
                 <td className="px-4 py-3 font-semibold text-gold">{formatPrice(p.price)}</td>
                 <td className="px-4 py-3">{p.isActive === false ? "No" : "Yes"}</td>
                 <td className="px-4 py-3">
-                  <Link
-                    href={`/admin/products/${p.id}/edit`}
-                    className="font-medium text-brown-dark hover:text-gold"
-                  >
-                    Edit
-                  </Link>
+                  <div className="flex items-center gap-3">
+                    <Link
+                      href={`/admin/products/${p.id}/edit`}
+                      className="font-medium text-brown-dark hover:text-gold"
+                    >
+                      Edit
+                    </Link>
+                    <DeleteAction
+                      endpoint={`/api/admin/products/${p.id}`}
+                      itemName={p.name}
+                    />
+                  </div>
                 </td>
               </tr>
             ))}

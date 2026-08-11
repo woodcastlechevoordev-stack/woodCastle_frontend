@@ -40,4 +40,9 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
 # .env.production
 NEXT_PUBLIC_API_URL=https://woodcastle-backend.onrender.com
+
+# Cloudinary (admin image uploads — products, categories, blog covers, offer banners)
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
 ```

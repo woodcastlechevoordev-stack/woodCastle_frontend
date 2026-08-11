@@ -114,6 +114,21 @@ export function getCategoryChildren(
   return categories.filter((c) => c.parentId === parent.id);
 }
 
+/**
+ * Leaf categories only (have a parent) — products must be assigned here,
+ * not to a top-level main category.
+ */
+export function getLeafCategories(categories: Category[]): Category[] {
+  const tree = nestCategories(categories);
+  const leaves: Category[] = [];
+  for (const main of tree) {
+    if (main.children?.length) {
+      leaves.push(...main.children);
+    }
+  }
+  return leaves;
+}
+
 export function findCategoryBySlug(
   categories: Category[],
   slug: string

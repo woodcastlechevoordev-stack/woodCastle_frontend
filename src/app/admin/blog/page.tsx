@@ -1,8 +1,9 @@
+import { DeleteAction } from "@/components/admin/DeleteAction";
+import { Button } from "@/components/ui/Button";
 import { adminBackendFetch } from "@/lib/admin-api";
 import type { BlogPost } from "@/lib/types";
 import { format } from "date-fns";
 import Link from "next/link";
-import { Button } from "@/components/ui/Button";
 
 export const dynamic = "force-dynamic";
 
@@ -47,12 +48,18 @@ export default async function AdminBlogPage() {
                     : "—"}
                 </td>
                 <td className="px-4 py-3">
-                  <Link
-                    href={`/admin/blog/${p.id}/edit`}
-                    className="font-medium text-brown-dark hover:text-gold"
-                  >
-                    Edit
-                  </Link>
+                  <div className="flex items-center gap-3">
+                    <Link
+                      href={`/admin/blog/${p.id}/edit`}
+                      className="font-medium text-brown-dark hover:text-gold"
+                    >
+                      Edit
+                    </Link>
+                    <DeleteAction
+                      endpoint={`/api/admin/blog/${p.id}`}
+                      itemName={p.title}
+                    />
+                  </div>
                 </td>
               </tr>
             ))}

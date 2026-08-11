@@ -29,6 +29,7 @@ export default async function EditBlogPage({ params }: Props) {
           slug: post.slug,
           excerpt: post.metaDescription || "",
           content: post.content,
+          coverImage: post.coverImage || "",
           metaTitle: post.metaTitle || "",
           metaDescription: post.metaDescription || "",
         }}
