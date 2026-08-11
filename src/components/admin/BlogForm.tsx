@@ -1,5 +1,6 @@
 "use client";
 
+import { CloudinaryImageUpload } from "@/components/admin/CloudinaryImageUpload";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
 import { blogFormSchema } from "@/lib/validations";
@@ -10,7 +11,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 type Values = z.infer<typeof blogFormSchema>;
 
@@ -24,6 +25,10 @@ export function BlogForm({
   published?: boolean;
 }) {
   const router = useRouter();
+  const [coverImage, setCoverImage] = useState<string | null>(
+    defaultValues?.coverImage || null
+  );
+  const [message, setMessage] = useState("");
   const form = useForm<Values>({
     resolver: zodResolver(blogFormSchema),
     defaultValues: {
@@ -31,6 +36,7 @@ export function BlogForm({
       slug: "",
       excerpt: "",
       content: "<p></p>",
+      coverImage: "",
       metaTitle: "",
       metaDescription: "",
       ...defaultValues,
@@ -66,10 +72,12 @@ export function BlogForm({
   const slug = form.watch("slug");
 
   async function onSubmit(values: Values) {
+    setMessage("");
     const payload = {
       title: values.title,
       slug: values.slug,
       content: values.content,
+      coverImage: coverImage || null,
       metaTitle: values.metaTitle,
       metaDescription: values.metaDescription || values.excerpt,
       published,
@@ -82,10 +90,13 @@ export function BlogForm({
         body: JSON.stringify(payload),
       }
     );
-    if (res.ok) {
-      router.push("/admin/blog");
-      router.refresh();
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setMessage(data.error || "Failed to save post");
+      return;
     }
+    router.push("/admin/blog");
+    router.refresh();
   }
 
   return (
@@ -93,6 +104,18 @@ export function BlogForm({
       <Input id="blog-title" label="Title" {...form.register("title")} />
       <Input id="blog-slug" label="Slug" {...form.register("slug")} />
       <Textarea id="blog-excerpt" label="Excerpt (SEO fallback)" {...form.register("excerpt")} />
+
+      <CloudinaryImageUpload
+        mode="single"
+        label="Cover image"
+        helpText="Drag and drop to upload the post cover image directly to Cloudinary."
+        folder="woodcastle/blog"
+        value={coverImage}
+        onChange={(url) => {
+          setCoverImage(url);
+          form.setValue("coverImage", url || "", { shouldValidate: true });
+        }}
+      />
 
       <div>
         <p className="mb-1.5 text-sm font-medium text-brown-dark">Content</p>
@@ -148,9 +171,10 @@ export function BlogForm({
         </div>
       </div>
 
+      {message && <p className="text-sm text-red-600">{message}</p>}
       <div className="flex gap-3">
-        <Button type="submit" variant="gold">
-          Save post
+        <Button type="submit" variant="gold" disabled={form.formState.isSubmitting}>
+          {form.formState.isSubmitting ? "Saving…" : "Save post"}
         </Button>
         <Button type="button" variant="outline" onClick={() => router.back()}>
           Cancel

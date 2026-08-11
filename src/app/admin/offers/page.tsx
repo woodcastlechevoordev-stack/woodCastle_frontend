@@ -1,5 +1,7 @@
 "use client";
 
+import { CloudinaryImageUpload } from "@/components/admin/CloudinaryImageUpload";
+import { DeleteAction } from "@/components/admin/DeleteAction";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
 import type { Offer } from "@/lib/types";
@@ -16,6 +18,7 @@ export default function AdminOffersPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Offer | null>(null);
+  const [bannerImage, setBannerImage] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   const form = useForm<Values>({
@@ -24,6 +27,7 @@ export default function AdminOffersPage() {
       title: "",
       discountText: "",
       description: "",
+      bannerImage: "",
       startDate: "",
       endDate: "",
       active: true,
@@ -43,10 +47,12 @@ export default function AdminOffersPage() {
   function openCreate() {
     setEditing(null);
     setError("");
+    setBannerImage(null);
     form.reset({
       title: "",
       discountText: "",
       description: "",
+      bannerImage: "",
       startDate: "",
       endDate: "",
       active: true,
@@ -57,10 +63,12 @@ export default function AdminOffersPage() {
   function openEdit(offer: Offer) {
     setEditing(offer);
     setError("");
+    setBannerImage(offer.bannerImage);
     form.reset({
       title: offer.title,
       discountText: offer.discountText || "",
       description: offer.description || "",
+      bannerImage: offer.bannerImage || "",
       startDate: offer.startsAt ? offer.startsAt.slice(0, 10) : "",
       endDate: offer.endsAt ? offer.endsAt.slice(0, 10) : "",
       active: offer.isActive,
@@ -70,10 +78,15 @@ export default function AdminOffersPage() {
 
   async function onSubmit(values: Values) {
     setError("");
+    if (!bannerImage) {
+      setError("Please upload a banner image.");
+      return;
+    }
     const payload = {
       title: values.title,
       discountText: values.discountText,
       description: values.description,
+      bannerImage,
       startsAt: values.startDate ? new Date(values.startDate).toISOString() : null,
       endsAt: values.endDate ? new Date(values.endDate).toISOString() : null,
       isActive: values.active,
@@ -113,28 +126,47 @@ export default function AdminOffersPage() {
             key={o.id}
             className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-brown-light bg-white p-5 shadow-sm"
           >
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="font-heading text-xl text-brown-dark">{o.title}</h2>
-                <span
-                  className={`rounded-md px-2 py-0.5 text-xs font-semibold ${
-                    o.isActive ? "bg-gold-light text-brown-dark" : "bg-gray-200 text-gray-600"
-                  }`}
-                >
-                  {o.isActive ? "Active" : "Inactive"}
-                </span>
-              </div>
-              {o.discountText && (
-                <p className="mt-1 text-sm font-medium text-gold">{o.discountText}</p>
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-4">
+              {o.bannerImage && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={o.bannerImage}
+                  alt=""
+                  className="h-16 w-28 shrink-0 rounded-lg object-cover"
+                />
               )}
-              <p className="mt-2 text-sm text-brown-mid">
-                {o.startsAt ? format(new Date(o.startsAt), "MMM d, yyyy") : "—"} –{" "}
-                {o.endsAt ? format(new Date(o.endsAt), "MMM d, yyyy") : "—"}
-              </p>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="font-heading text-xl text-brown-dark">{o.title}</h2>
+                  <span
+                    className={`rounded-md px-2 py-0.5 text-xs font-semibold ${
+                      o.isActive
+                        ? "bg-gold-light text-brown-dark"
+                        : "bg-gray-200 text-gray-600"
+                    }`}
+                  >
+                    {o.isActive ? "Active" : "Inactive"}
+                  </span>
+                </div>
+                {o.discountText && (
+                  <p className="mt-1 text-sm font-medium text-gold">{o.discountText}</p>
+                )}
+                <p className="mt-2 text-sm text-brown-mid">
+                  {o.startsAt ? format(new Date(o.startsAt), "MMM d, yyyy") : "—"} –{" "}
+                  {o.endsAt ? format(new Date(o.endsAt), "MMM d, yyyy") : "—"}
+                </p>
+              </div>
             </div>
-            <Button variant="outline" size="sm" onClick={() => openEdit(o)}>
-              Edit
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button variant="outline" size="sm" onClick={() => openEdit(o)}>
+                Edit
+              </Button>
+              <DeleteAction
+                endpoint={`/api/admin/offers/${o.id}`}
+                itemName={o.title}
+                onDeleted={load}
+              />
+            </div>
           </div>
         ))}
       </div>
@@ -156,6 +188,17 @@ export default function AdminOffersPage() {
                 id="offer-desc"
                 label="Description"
                 {...form.register("description")}
+              />
+              <CloudinaryImageUpload
+                mode="single"
+                label="Banner image"
+                helpText="Drag and drop to upload the offer banner directly to Cloudinary."
+                folder="woodcastle/offers"
+                value={bannerImage}
+                onChange={(url) => {
+                  setBannerImage(url);
+                  form.setValue("bannerImage", url || "", { shouldValidate: true });
+                }}
               />
               <div className="grid gap-4 sm:grid-cols-2">
                 <Input

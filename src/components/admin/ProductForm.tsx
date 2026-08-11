@@ -1,8 +1,9 @@
 "use client";
 
+import { CloudinaryImageUpload } from "@/components/admin/CloudinaryImageUpload";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
-import { nestCategories } from "@/lib/categories";
+import { getLeafCategories, nestCategories } from "@/lib/categories";
 import type { Category } from "@/lib/types";
 import { productFormSchema } from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,22 +14,14 @@ import { z } from "zod";
 
 type Values = z.infer<typeof productFormSchema>;
 
-function categoryOptions(flat: Category[]): { id: string; label: string }[] {
+function subcategoryOptions(flat: Category[]): { id: string; label: string }[] {
   const tree = nestCategories(flat);
   const options: { id: string; label: string }[] = [];
   for (const main of tree) {
-    if (main.children?.length) {
-      for (const sub of main.children) {
-        options.push({ id: sub.id, label: `${main.name} › ${sub.name}` });
-      }
-      options.push({ id: main.id, label: `${main.name} (all)` });
-    } else {
-      options.push({ id: main.id, label: main.name });
+    if (!main.children?.length) continue;
+    for (const sub of main.children) {
+      options.push({ id: sub.id, label: `${main.name} › ${sub.name}` });
     }
-  }
-  // Fallback if nesting produced nothing useful
-  if (options.length === 0) {
-    return flat.map((c) => ({ id: c.id, label: c.name }));
   }
   return options;
 }
@@ -43,8 +36,6 @@ export function ProductForm({
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [images, setImages] = useState<string[]>(defaultValues?.images ?? []);
-  const [imageUrl, setImageUrl] = useState("");
-  const [dragOver, setDragOver] = useState(false);
   const [message, setMessage] = useState("");
 
   const form = useForm<Values>({
@@ -65,7 +56,7 @@ export function ProductForm({
   });
 
   const categorySelectOptions = useMemo(
-    () => categoryOptions(categories),
+    () => subcategoryOptions(categories),
     [categories]
   );
 
@@ -75,8 +66,10 @@ export function ProductForm({
       .then((data) => {
         if (Array.isArray(data)) {
           setCategories(data);
-          if (!form.getValues("categoryId") && data[0]) {
-            form.setValue("categoryId", data[0].id);
+          const leaves = getLeafCategories(data);
+          const current = form.getValues("categoryId");
+          if (!current && leaves[0]) {
+            form.setValue("categoryId", leaves[0].id);
           }
         }
       })
@@ -99,29 +92,17 @@ export function ProductForm({
     }
   }
 
-  function handleFiles(files: FileList | null) {
-    if (!files) return;
-    const urls = Array.from(files).map((f) => URL.createObjectURL(f));
-    setImages((prev) => [...prev, ...urls]);
-  }
-
-  function addImageUrl() {
-    if (!imageUrl.trim()) return;
-    setImages((prev) => [...prev, imageUrl.trim()]);
-    setImageUrl("");
-  }
-
-  function moveImage(from: number, to: number) {
-    setImages((prev) => {
-      const next = [...prev];
-      const [item] = next.splice(from, 1);
-      next.splice(to, 0, item);
-      return next;
-    });
-  }
-
   async function onSubmit(values: Values) {
     setMessage("");
+    const leafIds = new Set(getLeafCategories(categories).map((c) => c.id));
+    if (!leafIds.has(values.categoryId)) {
+      setMessage("Please assign this product to a subcategory (not a main category).");
+      return;
+    }
+    if (images.length === 0) {
+      setMessage("Please upload at least one product image.");
+      return;
+    }
     const payload = {
       name: values.name,
       slug: values.slug,
@@ -185,19 +166,25 @@ export function ProductForm({
         />
         <div className="space-y-1.5">
           <label htmlFor="categoryId" className="block text-sm font-medium text-brown-dark">
-            Category
+            Subcategory
           </label>
           <select
             id="categoryId"
             className="w-full rounded-lg border border-brown-light bg-white px-4 py-3 text-base text-brown-dark outline-none focus:border-gold focus:ring-1 focus:ring-gold"
             {...form.register("categoryId")}
           >
+            {categorySelectOptions.length === 0 && (
+              <option value="">No subcategories yet — create one first</option>
+            )}
             {categorySelectOptions.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.label}
               </option>
             ))}
           </select>
+          <p className="text-xs text-brown-light">
+            Products must be assigned to a subcategory, not a main category.
+          </p>
         </div>
       </div>
 
@@ -206,84 +193,14 @@ export function ProductForm({
         Active (visible on site)
       </label>
 
-      <div>
-        <p className="text-sm font-medium text-brown-dark">Images</p>
-        <p className="mt-1 text-xs text-brown-light">
-          Paste Cloudinary/Unsplash URLs (recommended), or drop local files for preview only.
-        </p>
-        <div className="mt-3 flex gap-2">
-          <input
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="https://…"
-            className="flex-1 rounded-lg border border-brown-light px-3 py-2 text-sm outline-none focus:border-gold"
-          />
-          <Button type="button" variant="outline" onClick={addImageUrl}>
-            Add URL
-          </Button>
-        </div>
-        <div
-          onDragOver={(e) => {
-            e.preventDefault();
-            setDragOver(true);
-          }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setDragOver(false);
-            handleFiles(e.dataTransfer.files);
-          }}
-          className={`mt-3 rounded-xl border-2 border-dashed p-8 text-center transition-colors ${
-            dragOver ? "border-gold bg-gold-light/20" : "border-brown-light bg-white"
-          }`}
-        >
-          <label className="cursor-pointer text-sm font-semibold text-gold hover:underline">
-            Browse local files
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              className="hidden"
-              onChange={(e) => handleFiles(e.target.files)}
-            />
-          </label>
-        </div>
-        {images.length > 0 && (
-          <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {images.map((url, i) => (
-              <li key={url + i} className="relative overflow-hidden rounded-lg border border-brown-light">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={url} alt="" className="aspect-square w-full object-cover" />
-                <div className="absolute inset-x-0 bottom-0 flex gap-1 bg-brown-dark/70 p-1">
-                  <button
-                    type="button"
-                    className="flex-1 text-xs text-cream disabled:opacity-40"
-                    disabled={i === 0}
-                    onClick={() => moveImage(i, i - 1)}
-                  >
-                    ←
-                  </button>
-                  <button
-                    type="button"
-                    className="flex-1 text-xs text-cream"
-                    onClick={() => setImages((prev) => prev.filter((_, idx) => idx !== i))}
-                  >
-                    Remove
-                  </button>
-                  <button
-                    type="button"
-                    className="flex-1 text-xs text-cream disabled:opacity-40"
-                    disabled={i === images.length - 1}
-                    onClick={() => moveImage(i, i + 1)}
-                  >
-                    →
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <CloudinaryImageUpload
+        mode="multi"
+        label="Images"
+        helpText="Drag and drop to upload directly to Cloudinary. First image is the primary listing image."
+        folder="woodcastle/products"
+        value={images}
+        onChange={setImages}
+      />
 
       <div className="rounded-xl border border-brown-light bg-white p-5">
         <p className="eyebrow">SEO</p>

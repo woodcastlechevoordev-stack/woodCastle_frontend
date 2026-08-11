@@ -159,11 +159,11 @@ Actual brand facts to use across the site (replacing placeholder copy anywhere i
 | `/admin/login` | Username + password, then TOTP code screen if 2FA enabled |
 | `/admin/2fa-setup` | QR code display + confirmation, for enabling Google Authenticator |
 | `/admin` | Dashboard — recent enquiries count, quick links |
-| `/admin/products` | Product list, search/filter |
+| `/admin/products` | Product list, search/filter, **Edit and Delete action per row** (Delete opens a confirmation dialog before calling the DELETE endpoint) |
 | `/admin/products/new`, `/admin/products/[id]/edit` | Product form: name, description, price, category, images (drag-drop upload to Cloudinary), SEO fields (metaTitle/metaDescription) |
-| `/admin/categories` | Category list + create/edit modal |
+| `/admin/categories` | Category list + create/edit modal — **includes image upload** (same drag-and-drop, direct-to-Cloudinary signed upload widget as the product form, not a paste-a-URL field), plus name, parent category selector, and SEO fields. **Delete action per row** with confirmation — deleting a category with products or subcategories attached should warn the admin and block the delete until those are reassigned or removed |
 | `/admin/products/import` | Bulk import — upload the .xlsx template, review a preview of changes/errors, confirm |
-| `/admin/blog` | Blog post list |
+| `/admin/blog` | Blog post list, **Edit and Delete action per row** |
 | `/admin/blog/new`, `/admin/blog/[id]/edit` | Rich text editor (e.g. Tiptap) for post content, cover image upload, SEO fields |
 | `/admin/offers` | Offers list + create/edit (banner image, discount text, active window) |
 | `/admin/enquiries` | Enquiry inbox — filterable by status (new/contacted/closed), click to view full details and mark status |
@@ -199,14 +199,17 @@ Mobile-first Tailwind classes throughout (`grid-cols-1 sm:grid-cols-2 lg:grid-co
 
 ---
 
-## 7. Enquiry Form → OTP Flow (Frontend Side)
+## 7. Enquiry Form → WhatsApp Flow (Frontend Side)
 
-Matches the backend's flow exactly:
+No OTP step in Phase 1 — matches the backend's simplified flow:
 
-1. User fills enquiry form on `/product/[slug]` (name, phone, message) → `POST /api/enquiries`
-2. On success, frontend shows an inline OTP step (not a separate page — keep it in the same modal/section to avoid drop-off): "We've sent a code to verify your number"
-3. User enters code → `POST /api/auth/verify-otp`
-4. On success: show confirmation ("Enquiry sent! Our team will reach out on WhatsApp shortly") and store the returned JWT in a cookie for future visits (so returning users skip OTP on their next enquiry, if you want that convenience — worth confirming with the client whether repeat enquiries should re-verify or not)
+1. User fills the enquiry form on `/product/[slug]` (name, phone, message) → `POST /api/enquiries`
+2. Backend responds with `{ enquiry, whatsappLink }`
+3. Frontend immediately opens `whatsappLink` in a new tab (`window.open(whatsappLink, '_blank')`) — this launches WhatsApp (web or the installed app, whichever the device resolves `wa.me` to) with a message pre-filled: customer name, phone, product, and their enquiry text. The customer just needs to tap **Send** inside WhatsApp — the message itself is already written for them.
+4. Simultaneously, show an on-page confirmation ("Enquiry received! We've opened WhatsApp for you — just hit send to reach our team.") so the flow feels complete even if the customer's browser blocks the new tab or they don't have WhatsApp installed on that device
+5. No account/session is created for the customer — the enquiry is saved on the backend regardless of whether they complete the WhatsApp step
+
+**Mobile note:** on phones, `wa.me` links open the WhatsApp app directly if installed; on desktop, they open WhatsApp Web (or prompt to install the desktop app if neither is set up). Test both paths — desktop users without WhatsApp Web logged in are the one case where this can feel like a dead end, worth having the confirmation message also show the admin's phone number as a fallback for them to text/call directly.
 
 ---
 
@@ -215,8 +218,9 @@ Matches the backend's flow exactly:
 - **Login:** clean centered card, brown/gold branding consistent with public site (this is still Woodcastle's admin, worth feeling like the same product, not a generic dashboard template)
 - **Product form image upload:** drag-and-drop multi-image upload with reordering (first image = primary listing image), progress indicators, upload directly to Cloudinary from the browser (signed upload) to avoid routing large files through your own server
 - **Blog editor:** Tiptap or similar rich text editor, with a live SEO preview showing how the metaTitle/metaDescription will look in a Google search result snippet
-- **Enquiry inbox:** table view with status badges (new = gold, contacted = brown, closed = grey), click-through to detail view showing full enquiry + linked product + WhatsApp send status
-- **Offers:** simple banner-image + text form, with a start/end date picker so offers can be scheduled and auto-expire without the admin manually deactivating them
+- **Enquiry inbox:** table view with status badges (new = gold, contacted = brown, closed = grey), click-through to detail view showing full enquiry + linked product (no WhatsApp delivery status shown, since sending happens on the customer's own device and isn't something the backend can confirm)
+- **Offers:** title, description, discount text, and a **banner image upload** — same drag-and-drop, direct-to-Cloudinary signed upload widget used on the product form (not a paste-a-URL field), plus a start/end date picker so offers can be scheduled and auto-expire without the admin manually deactivating them
+- **Delete actions:** every list view (products, categories, blog, offers) needs a Delete action that opens a confirmation modal ("Delete [item name]? This can't be undone.") before calling the DELETE endpoint — never delete on a single click. Category deletes specifically need a backend check: block or warn if the category still has products or subcategories attached, rather than silently orphaning them.
 - **Bulk import:** an "Import from Sheet" button on `/admin/products` opens `/admin/products/import` — a drag-and-drop upload zone for the `.xlsx` template, a "Download Template" link for first-time users, then a preview table (rows to create in gold, rows to update in brown, error rows in red with the specific message) before a final "Confirm Import" button; matches the same brown/gold visual language as the rest of the admin panel, not a generic file-upload widget
 
 ---

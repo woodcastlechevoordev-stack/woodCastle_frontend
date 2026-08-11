@@ -69,7 +69,8 @@ export type Enquiry = {
   phone: string;
   message: string;
   status: EnquiryStatus;
-  whatsappSent: boolean;
+  /** @deprecated Customer opens WhatsApp themselves; not shown in admin. */
+  whatsappSent?: boolean;
   createdAt: string;
   product?: {
     id: string;

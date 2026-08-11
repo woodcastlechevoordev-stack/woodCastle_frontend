@@ -1,5 +1,7 @@
 "use client";
 
+import { CloudinaryImageUpload } from "@/components/admin/CloudinaryImageUpload";
+import { DeleteAction } from "@/components/admin/DeleteAction";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
 import { getTopLevelCategories, nestCategories } from "@/lib/categories";
@@ -12,10 +14,26 @@ import { z } from "zod";
 
 type Values = z.infer<typeof categoryFormSchema>;
 
+function categoryBlockReason(cat: Category): string | null {
+  const childCount = cat.children?.length ?? 0;
+  const productCount = cat._count?.products ?? 0;
+  if (childCount > 0 && productCount > 0) {
+    return `This category still has ${childCount} subcategor${childCount === 1 ? "y" : "ies"} and ${productCount} product${productCount === 1 ? "" : "s"}. Reassign or remove them before deleting.`;
+  }
+  if (childCount > 0) {
+    return `This category still has ${childCount} subcategor${childCount === 1 ? "y" : "ies"}. Reassign or remove them before deleting.`;
+  }
+  if (productCount > 0) {
+    return `This category still has ${productCount} product${productCount === 1 ? "" : "s"}. Reassign or remove them before deleting.`;
+  }
+  return null;
+}
+
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   const form = useForm<Values>({
@@ -25,6 +43,7 @@ export default function AdminCategoriesPage() {
       slug: "",
       description: "",
       parentId: "",
+      imageUrl: "",
       metaTitle: "",
       metaDescription: "",
     },
@@ -50,11 +69,13 @@ export default function AdminCategoriesPage() {
   function openCreate() {
     setEditing(null);
     setError("");
+    setImageUrl(null);
     form.reset({
       name: "",
       slug: "",
       description: "",
       parentId: "",
+      imageUrl: "",
       metaTitle: "",
       metaDescription: "",
     });
@@ -64,11 +85,13 @@ export default function AdminCategoriesPage() {
   function openEdit(cat: Category) {
     setEditing(cat);
     setError("");
+    setImageUrl(cat.imageUrl);
     form.reset({
       name: cat.name,
       slug: cat.slug,
       description: cat.description || "",
       parentId: cat.parentId || "",
+      imageUrl: cat.imageUrl || "",
       metaTitle: cat.metaTitle || "",
       metaDescription: cat.metaDescription || "",
     });
@@ -82,6 +105,7 @@ export default function AdminCategoriesPage() {
       slug: values.slug,
       description: values.description || undefined,
       parentId: values.parentId ? values.parentId : null,
+      imageUrl: imageUrl || null,
       metaTitle: values.metaTitle,
       metaDescription: values.metaDescription,
     };
@@ -100,6 +124,37 @@ export default function AdminCategoriesPage() {
     }
     setOpen(false);
     await load();
+  }
+
+  function CategoryActions({ cat, size = "sm" }: { cat: Category; size?: "sm" | "xs" }) {
+    const blockReason = categoryBlockReason(cat);
+    return (
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => openEdit(cat)}
+          className={
+            size === "xs"
+              ? "text-xs font-semibold text-gold hover:underline"
+              : "text-sm font-semibold text-gold hover:underline"
+          }
+        >
+          Edit
+        </button>
+        <DeleteAction
+          endpoint={`/api/admin/categories/${cat.id}`}
+          itemName={cat.name}
+          blocked={Boolean(blockReason)}
+          warning={blockReason || undefined}
+          className={
+            size === "xs"
+              ? "text-xs font-semibold text-red-700 hover:underline"
+              : "text-sm font-semibold text-red-700 hover:underline"
+          }
+          onDeleted={load}
+        />
+      </div>
+    );
   }
 
   return (
@@ -123,47 +178,58 @@ export default function AdminCategoriesPage() {
             className="rounded-xl border border-brown-light bg-white p-5 shadow-sm"
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-gold">
-                  Main category
-                </p>
-                <h2 className="mt-1 font-heading text-xl text-brown-dark">{main.name}</h2>
-                <p className="mt-1 text-sm text-brown-light">/{main.slug}</p>
-                {main._count && (
-                  <p className="mt-2 text-sm text-brown-mid">
-                    {main._count.products} products
-                  </p>
+              <div className="flex min-w-0 flex-1 gap-4">
+                {main.imageUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={main.imageUrl}
+                    alt=""
+                    className="h-16 w-16 shrink-0 rounded-lg object-cover"
+                  />
                 )}
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-gold">
+                    Main category
+                  </p>
+                  <h2 className="mt-1 font-heading text-xl text-brown-dark">{main.name}</h2>
+                  <p className="mt-1 text-sm text-brown-light">/{main.slug}</p>
+                  {main._count && (
+                    <p className="mt-2 text-sm text-brown-mid">
+                      {main._count.products} products
+                      {(main.children?.length ?? 0) > 0
+                        ? ` · ${main.children!.length} subcategories`
+                        : ""}
+                    </p>
+                  )}
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => openEdit(main)}
-                className="text-sm font-semibold text-gold hover:underline"
-              >
-                Edit
-              </button>
+              <CategoryActions cat={main} />
             </div>
 
             {(main.children?.length ?? 0) > 0 && (
               <ul className="mt-4 grid gap-3 border-t border-brown-light/40 pt-4 sm:grid-cols-2">
-                {main.children!.map((sub) => (
-                  <li
-                    key={sub.id}
-                    className="flex items-center justify-between rounded-lg bg-cream/70 px-3 py-2.5"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-brown-dark">{sub.name}</p>
-                      <p className="text-xs text-brown-light">/{sub.slug}</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => openEdit(sub)}
-                      className="text-xs font-semibold text-gold hover:underline"
+                {main.children!.map((sub) => {
+                  // Prefer counts from the flat list when nesting dropped them
+                  const full =
+                    categories.find((c) => c.id === sub.id) || sub;
+                  return (
+                    <li
+                      key={sub.id}
+                      className="flex items-center justify-between rounded-lg bg-cream/70 px-3 py-2.5"
                     >
-                      Edit
-                    </button>
-                  </li>
-                ))}
+                      <div>
+                        <p className="text-sm font-medium text-brown-dark">{full.name}</p>
+                        <p className="text-xs text-brown-light">/{full.slug}</p>
+                        {full._count && (
+                          <p className="mt-0.5 text-xs text-brown-mid">
+                            {full._count.products} products
+                          </p>
+                        )}
+                      </div>
+                      <CategoryActions cat={full} size="xs" />
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
@@ -178,13 +244,9 @@ export default function AdminCategoriesPage() {
               >
                 <h2 className="font-heading text-xl text-brown-dark">{c.name}</h2>
                 <p className="mt-1 text-sm text-brown-light">/{c.slug}</p>
-                <button
-                  type="button"
-                  onClick={() => openEdit(c)}
-                  className="mt-4 text-sm font-semibold text-gold hover:underline"
-                >
-                  Edit
-                </button>
+                <div className="mt-4">
+                  <CategoryActions cat={c} />
+                </div>
               </div>
             ))}
           </div>
@@ -224,6 +286,17 @@ export default function AdminCategoriesPage() {
                   subcategory.
                 </p>
               </div>
+              <CloudinaryImageUpload
+                mode="single"
+                label="Category image"
+                helpText="Drag and drop to upload the category tile image directly to Cloudinary."
+                folder="woodcastle/categories"
+                value={imageUrl}
+                onChange={(url) => {
+                  setImageUrl(url);
+                  form.setValue("imageUrl", url || "", { shouldValidate: true });
+                }}
+              />
               <Input id="cat-meta-title" label="Meta title" {...form.register("metaTitle")} />
               <Textarea
                 id="cat-meta-desc"
