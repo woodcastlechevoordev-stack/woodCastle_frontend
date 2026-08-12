@@ -1,5 +1,62 @@
 import { getSiteUrl, siteInfo } from "./api";
 import type { Product } from "./types";
+import type { Metadata } from "next";
+
+/**
+ * Admin-entered metaTitle is already the complete document title.
+ * Only append "| Woodcastle" when metaTitle is blank.
+ */
+export function pageTitle(
+  metaTitle: string | null | undefined,
+  name: string
+): string {
+  const trimmed = metaTitle?.trim();
+  if (trimmed) return trimmed;
+  return `${name} | ${siteInfo.name}`;
+}
+
+export function publicPageMetadata({
+  metaTitle,
+  name,
+  description,
+  canonical,
+  images,
+  type = "website",
+}: {
+  metaTitle?: string | null;
+  name: string;
+  description?: string | null;
+  canonical: string;
+  images?: string[] | string | null;
+  type?: "website" | "article";
+}): Metadata {
+  const title = pageTitle(metaTitle, name);
+  const desc = description?.trim() || undefined;
+  const imageList = !images
+    ? undefined
+    : (Array.isArray(images) ? images : [images]).filter(
+        (url): url is string => Boolean(url)
+      );
+
+  return {
+    title,
+    description: desc,
+    alternates: { canonical },
+    openGraph: {
+      title,
+      description: desc,
+      url: canonical,
+      type,
+      images: imageList,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: desc,
+      images: imageList,
+    },
+  };
+}
 
 export function organizationJsonLd() {
   return {

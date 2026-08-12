@@ -47,14 +47,14 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-cream lg:flex">
+    <div className="min-h-screen bg-cream">
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 border-r border-brown-light/50 bg-brown-dark text-cream transition-transform lg:static lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex h-screen w-64 flex-col border-r border-brown-light/50 bg-brown-dark text-cream transition-transform lg:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex h-[4.75rem] items-center justify-between border-b border-brown-light/40 bg-white px-4">
+        <div className="flex h-[4.75rem] shrink-0 items-center justify-between border-b border-brown-light/40 bg-white px-4">
           <Link href="/admin" className="inline-flex min-w-0 items-center">
             <Image
               src="/brand/logo.png"
@@ -74,10 +74,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <X size={20} />
           </button>
         </div>
-        <p className="px-5 pt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-gold-light/70">
+        <p className="shrink-0 px-5 pt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-gold-light/70">
           Admin
         </p>
-        <nav className="mt-2 space-y-1 px-3">
+        <nav className="mt-2 flex-1 space-y-1 overflow-y-auto px-3 pb-4">
           {links.map((link) => {
             const active =
               link.href === "/admin"
@@ -105,7 +105,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <button
           type="button"
           onClick={logout}
-          className="absolute bottom-6 left-3 right-3 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-cream/70 hover:bg-white/5 hover:text-cream"
+          className="mx-3 mb-6 flex shrink-0 items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-cream/70 hover:bg-white/5 hover:text-cream"
         >
           <LogOut size={18} />
           Sign out
@@ -121,7 +121,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         />
       )}
 
-      <div className="flex min-h-screen flex-1 flex-col">
+      <div className="flex min-h-screen flex-1 flex-col lg:pl-64">
         <header className="flex h-16 items-center gap-3 border-b border-brown-light/50 bg-white px-4 lg:px-8">
           <button
             type="button"

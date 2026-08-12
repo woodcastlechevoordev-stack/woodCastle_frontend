@@ -1,14 +1,14 @@
 import { ContactForm } from "@/components/ContactForm";
 import { siteInfo } from "@/lib/api";
-import { JsonLd, localBusinessJsonLd } from "@/lib/seo";
+import { JsonLd, localBusinessJsonLd, publicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import { Mail, MapPin, Phone } from "lucide-react";
 
-export const metadata: Metadata = {
-  title: "Contact Us",
+export const metadata: Metadata = publicPageMetadata({
+  name: "Contact Us",
   description: `Visit Woodcastle in Chevoor, Thrissur — 44 years of teak furniture. Call ${siteInfo.phone} or send us a message.`,
-  alternates: { canonical: "/contact" },
-};
+  canonical: "/contact",
+});
 
 export default function ContactPage() {
   return (

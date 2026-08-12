@@ -274,7 +274,7 @@ export default function AdminCategoriesPage() {
                   className="w-full rounded-lg border border-brown-light bg-cream px-3 py-2.5 text-sm text-brown-dark outline-none focus:border-gold"
                   {...form.register("parentId")}
                 >
-                  <option value="">None (main category)</option>
+                  <option value="">None (top-level category)</option>
                   {parentOptions.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.name}
@@ -282,7 +282,7 @@ export default function AdminCategoriesPage() {
                   ))}
                 </select>
                 <p className="mt-1 text-xs text-brown-light">
-                  Leave empty for one of the 11 main collections; pick a parent to create a
+                  Leave empty for a top-level collection; pick a parent to create a
                   subcategory.
                 </p>
               </div>

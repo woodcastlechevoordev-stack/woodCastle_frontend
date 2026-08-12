@@ -3,7 +3,7 @@ import { CategoryCard } from "@/components/CategoryCard";
 import { CategoryProductGrid } from "@/components/CategoryProductGrid";
 import { getCategories, getCategoryWithProducts } from "@/lib/api";
 import { flattenCategories } from "@/lib/categories";
-import { breadcrumbJsonLd, JsonLd } from "@/lib/seo";
+import { breadcrumbJsonLd, JsonLd, publicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -19,17 +19,14 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const category = await getCategoryWithProducts(slug);
-  if (!category) return { title: "Category" };
-  return {
-    title: category.metaTitle || category.name,
-    description: category.metaDescription || undefined,
-    alternates: { canonical: `/category/${slug}` },
-    openGraph: {
-      title: category.metaTitle || category.name,
-      description: category.metaDescription || undefined,
-      images: category.imageUrl ? [category.imageUrl] : undefined,
-    },
-  };
+  if (!category) return { title: "Category | Woodcastle" };
+  return publicPageMetadata({
+    metaTitle: category.metaTitle,
+    name: category.name,
+    description: category.metaDescription,
+    canonical: `/category/${slug}`,
+    images: category.imageUrl,
+  });
 }
 
 export default async function CategoryPage({ params }: Props) {

@@ -4,6 +4,7 @@ import {
   getProducts,
   getSiteUrl,
 } from "@/lib/api";
+import { flattenCategories } from "@/lib/categories";
 import type { MetadataRoute } from "next";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -15,6 +16,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     getProducts(),
     getBlogPosts(),
   ]);
+
+  const allCategories = flattenCategories(categories);
 
   const staticRoutes: MetadataRoute.Sitemap = [
     "",
@@ -32,11 +35,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     ...staticRoutes,
-    ...categories.map((c) => ({
+    ...allCategories.map((c) => ({
       url: `${base}/category/${c.slug}`,
       lastModified: now,
       changeFrequency: "weekly" as const,
-      priority: 0.8,
+      priority: c.parentId ? 0.7 : 0.8,
     })),
     ...products.map((p) => ({
       url: `${base}/product/${p.slug}`,

@@ -17,10 +17,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
-  title: {
-    default: `${siteInfo.name} | ${siteInfo.tagline}`,
-    template: `%s | ${siteInfo.name}`,
-  },
+  title: `${siteInfo.name} | ${siteInfo.tagline}`,
   description:
     "Kerala's best furniture — 44 years of 100% teak wood craftsmanship from Chevoor, Thrissur. Enquire for sofas, beds, dining sets and more.",
   icons: {

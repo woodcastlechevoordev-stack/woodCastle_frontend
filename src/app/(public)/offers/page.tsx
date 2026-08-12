@@ -1,5 +1,6 @@
 import { getActiveOffers } from "@/lib/api";
 import { FALLBACK_IMAGE, safeImageUrl } from "@/lib/images";
+import { publicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -8,11 +9,11 @@ import { Button } from "@/components/ui/Button";
 
 export const revalidate = 60;
 
-export const metadata: Metadata = {
-  title: "Offers & Promotions",
+export const metadata: Metadata = publicPageMetadata({
+  name: "Offers & Promotions",
   description: "Current offers and seasonal promotions on Woodcastle furniture.",
-  alternates: { canonical: "/offers" },
-};
+  canonical: "/offers",
+});
 
 export default async function OffersPage() {
   const offers = await getActiveOffers();
