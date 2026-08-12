@@ -1,6 +1,6 @@
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { excerptFromHtml, getBlogPostBySlug, getBlogPosts } from "@/lib/api";
-import { articleJsonLd, JsonLd } from "@/lib/seo";
+import { articleJsonLd, JsonLd, publicPageMetadata } from "@/lib/seo";
 import { format } from "date-fns";
 import type { Metadata } from "next";
 import Image from "next/image";
@@ -18,18 +18,15 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const post = await getBlogPostBySlug(slug);
-  if (!post) return { title: "Blog" };
-  return {
-    title: post.metaTitle || post.title,
+  if (!post) return { title: "Blog | Woodcastle" };
+  return publicPageMetadata({
+    metaTitle: post.metaTitle,
+    name: post.title,
     description: post.metaDescription || excerptFromHtml(post.content),
-    alternates: { canonical: `/blog/${slug}` },
-    openGraph: {
-      title: post.metaTitle || post.title,
-      description: post.metaDescription || excerptFromHtml(post.content),
-      images: post.coverImage ? [post.coverImage] : undefined,
-      type: "article",
-    },
-  };
+    canonical: `/blog/${slug}`,
+    images: post.coverImage,
+    type: "article",
+  });
 }
 
 export default async function BlogPostPage({ params }: Props) {

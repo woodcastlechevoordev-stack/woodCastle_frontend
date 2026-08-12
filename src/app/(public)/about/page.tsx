@@ -1,5 +1,6 @@
 import { getStaticPage, siteInfo } from "@/lib/api";
 import { brand } from "@/lib/brand";
+import { publicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -19,11 +20,12 @@ const DEFAULT_ABOUT_HTML = `
 
 export async function generateMetadata(): Promise<Metadata> {
   const page = await getStaticPage("about");
-  return {
-    title: page?.title || "About Us",
+  return publicPageMetadata({
+    metaTitle: page?.title,
+    name: "About Us",
     description: `${brand.yearsOfLegacy} years of teak furniture from ${brand.locationFull} — ${brand.tagline}.`,
-    alternates: { canonical: "/about" },
-  };
+    canonical: "/about",
+  });
 }
 
 export default async function AboutPage() {

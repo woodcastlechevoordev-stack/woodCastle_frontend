@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
 import { getStaticPage, siteInfo } from "@/lib/api";
+import { publicPageMetadata } from "@/lib/seo";
 
 export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
   const page = await getStaticPage("terms");
-  return {
-    title: page?.title || "Terms & Conditions",
+  return publicPageMetadata({
+    metaTitle: page?.title,
+    name: "Terms & Conditions",
     description: `Terms and conditions for enquiries with ${siteInfo.name}.`,
-    alternates: { canonical: "/terms-and-conditions" },
-  };
+    canonical: "/terms-and-conditions",
+  });
 }
 
 export default async function TermsPage() {

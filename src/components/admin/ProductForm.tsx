@@ -14,16 +14,11 @@ import { z } from "zod";
 
 type Values = z.infer<typeof productFormSchema>;
 
-function subcategoryOptions(flat: Category[]): { id: string; label: string }[] {
+function subcategoryGroups(flat: Category[]): { main: string; children: Category[] }[] {
   const tree = nestCategories(flat);
-  const options: { id: string; label: string }[] = [];
-  for (const main of tree) {
-    if (!main.children?.length) continue;
-    for (const sub of main.children) {
-      options.push({ id: sub.id, label: `${main.name} › ${sub.name}` });
-    }
-  }
-  return options;
+  return tree
+    .filter((main) => (main.children?.length ?? 0) > 0)
+    .map((main) => ({ main: main.name, children: main.children! }));
 }
 
 export function ProductForm({
@@ -55,8 +50,8 @@ export function ProductForm({
     },
   });
 
-  const categorySelectOptions = useMemo(
-    () => subcategoryOptions(categories),
+  const categoryGroups = useMemo(
+    () => subcategoryGroups(categories),
     [categories]
   );
 
@@ -173,13 +168,17 @@ export function ProductForm({
             className="w-full rounded-lg border border-brown-light bg-white px-4 py-3 text-base text-brown-dark outline-none focus:border-gold focus:ring-1 focus:ring-gold"
             {...form.register("categoryId")}
           >
-            {categorySelectOptions.length === 0 && (
+            {categoryGroups.length === 0 && (
               <option value="">No subcategories yet — create one first</option>
             )}
-            {categorySelectOptions.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.label}
-              </option>
+            {categoryGroups.map((group) => (
+              <optgroup key={group.main} label={group.main}>
+                {group.children.map((sub) => (
+                  <option key={sub.id} value={sub.id}>
+                    {sub.name}
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </select>
           <p className="text-xs text-brown-light">

@@ -3,7 +3,12 @@ import { EnquiryForm } from "@/components/EnquiryForm";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductGallery } from "@/components/ProductGallery";
 import { formatPrice, getProductBySlug, getProducts } from "@/lib/api";
-import { breadcrumbJsonLd, JsonLd, productJsonLd } from "@/lib/seo";
+import {
+  breadcrumbJsonLd,
+  JsonLd,
+  productJsonLd,
+  publicPageMetadata,
+} from "@/lib/seo";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -19,17 +24,14 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
-  if (!product) return { title: "Product" };
-  return {
-    title: product.metaTitle || product.name,
-    description: product.metaDescription || undefined,
-    alternates: { canonical: `/product/${slug}` },
-    openGraph: {
-      title: product.metaTitle || product.name,
-      description: product.metaDescription || undefined,
-      images: product.images,
-    },
-  };
+  if (!product) return { title: "Product | Woodcastle" };
+  return publicPageMetadata({
+    metaTitle: product.metaTitle,
+    name: product.name,
+    description: product.metaDescription,
+    canonical: `/product/${slug}`,
+    images: product.images,
+  });
 }
 
 export default async function ProductPage({ params }: Props) {

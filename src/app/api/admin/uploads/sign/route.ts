@@ -1,22 +1,16 @@
-import { createHash } from "crypto";
+import { signCloudinaryUpload } from "@/lib/cloudinary-sign";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-/**
- * Returns a Cloudinary signed-upload payload for the admin browser client.
- * Requires CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET.
- */
+/** @deprecated Prefer POST /api/admin/upload/signature */
 export async function GET(req: NextRequest) {
   const jar = await cookies();
   if (!jar.get("admin_token")?.value) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-  const apiKey = process.env.CLOUDINARY_API_KEY;
-  const apiSecret = process.env.CLOUDINARY_API_SECRET;
-
-  if (!cloudName || !apiKey || !apiSecret) {
+  const payload = signCloudinaryUpload(req.nextUrl.searchParams.get("folder"));
+  if (!payload) {
     return NextResponse.json(
       {
         error:
@@ -26,19 +20,5 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const folderParam = req.nextUrl.searchParams.get("folder") || "woodcastle";
-  const folder = folderParam.replace(/[^a-zA-Z0-9/_-]/g, "").slice(0, 80) || "woodcastle";
-  const timestamp = Math.floor(Date.now() / 1000);
-
-  // Cloudinary signature: sorted params joined as key=value, then + api_secret, SHA-1
-  const toSign = `folder=${folder}&timestamp=${timestamp}${apiSecret}`;
-  const signature = createHash("sha1").update(toSign).digest("hex");
-
-  return NextResponse.json({
-    cloudName,
-    apiKey,
-    timestamp,
-    signature,
-    folder,
-  });
+  return NextResponse.json(payload);
 }

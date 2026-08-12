@@ -21,9 +21,11 @@ export async function uploadToCloudinary(
   folder = "woodcastle",
   onProgress?: (p: UploadProgress) => void
 ): Promise<string> {
-  const signRes = await fetch(
-    `/api/admin/uploads/sign?folder=${encodeURIComponent(folder)}`
-  );
+  const signRes = await fetch("/api/admin/upload/signature", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ folder }),
+  });
   const signData = (await signRes.json()) as CloudinarySignResponse & {
     error?: string;
   };

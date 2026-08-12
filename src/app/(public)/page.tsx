@@ -19,10 +19,15 @@ import { getTopLevelCategories } from "@/lib/categories";
 import { FALLBACK_IMAGE, safeImageUrl } from "@/lib/images";
 import { JsonLd, organizationJsonLd } from "@/lib/seo";
 import { format } from "date-fns";
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
 export const revalidate = 60;
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 const FALLBACK_HERO = FALLBACK_IMAGE;
 
@@ -104,6 +109,8 @@ export default async function HomePage() {
 
       <HeroCarousel slides={heroSlides} />
 
+      <TrustFeatures variant="light" />
+
       <section id="collections" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
         <div className="mb-10 text-center">
           <p className="eyebrow">Browse Categories</p>
@@ -136,7 +143,7 @@ export default async function HomePage() {
             </p>
           ) : (
             <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-              {featured.slice(0, 4).map((p) => (
+              {featured.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}
             </div>
@@ -259,8 +266,6 @@ export default async function HomePage() {
       )}
 
       <InstagramGallery products={galleryProducts} />
-
-      <TrustFeatures variant="light" />
     </>
   );
 }
