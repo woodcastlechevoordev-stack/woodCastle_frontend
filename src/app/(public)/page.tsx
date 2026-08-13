@@ -225,22 +225,29 @@ export default async function HomePage() {
             <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
               {posts.slice(0, 3).map((post) => (
                 <article key={post.id} className="group">
+                  <div className="relative">
+                    <Link href={`/blog/${post.slug}`} className="block">
+                      <div className="relative aspect-[16/10] overflow-hidden rounded-xl">
+                        <Image
+                          src={
+                            post.coverImage ||
+                            "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80"
+                          }
+                          alt={post.title}
+                          fill
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        />
+                      </div>
+                    </Link>
+                    <ShareButton
+                      title={post.title}
+                      urlPath={`/blog/${post.slug}`}
+                      className="absolute right-3 top-3 z-10"
+                    />
+                  </div>
                   <Link href={`/blog/${post.slug}`} className="block">
-                    <div className="relative aspect-[16/10] overflow-hidden rounded-xl">
-                      <Image
-                        src={
-                          post.coverImage ||
-                          "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80"
-                        }
-                        alt={post.title}
-                        fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      />
-                    </div>
-                  </Link>
-                  <div className="mt-4 flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wider text-brown-light">
+                    <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wider text-brown-light">
                       <span className="text-gold">Studio</span>
                       {post.publishedAt && (
                         <>
@@ -251,13 +258,6 @@ export default async function HomePage() {
                         </>
                       )}
                     </div>
-                    <ShareButton
-                      title={post.title}
-                      urlPath={`/blog/${post.slug}`}
-                      className="shrink-0"
-                    />
-                  </div>
-                  <Link href={`/blog/${post.slug}`} className="block">
                     <h3 className="mt-2 font-heading text-xl text-brown-dark transition-colors group-hover:text-gold">
                       {post.title}
                     </h3>
