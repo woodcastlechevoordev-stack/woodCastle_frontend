@@ -3,6 +3,7 @@ import { HeroCarousel, type HeroSlide } from "@/components/HeroCarousel";
 import { InstagramGallery } from "@/components/InstagramGallery";
 import { LookbookBanner } from "@/components/LookbookBanner";
 import { ProductCard } from "@/components/ProductCard";
+import { ShareButton } from "@/components/ShareButton";
 import { SignatureCollections } from "@/components/SignatureCollections";
 import { Testimonials } from "@/components/Testimonials";
 import { TrustFeatures } from "@/components/TrustFeatures";
@@ -237,7 +238,9 @@ export default async function HomePage() {
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       />
                     </div>
-                    <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wider text-brown-light">
+                  </Link>
+                  <div className="mt-4 flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wider text-brown-light">
                       <span className="text-gold">Studio</span>
                       {post.publishedAt && (
                         <>
@@ -248,6 +251,13 @@ export default async function HomePage() {
                         </>
                       )}
                     </div>
+                    <ShareButton
+                      title={post.title}
+                      urlPath={`/blog/${post.slug}`}
+                      className="shrink-0"
+                    />
+                  </div>
+                  <Link href={`/blog/${post.slug}`} className="block">
                     <h3 className="mt-2 font-heading text-xl text-brown-dark transition-colors group-hover:text-gold">
                       {post.title}
                     </h3>

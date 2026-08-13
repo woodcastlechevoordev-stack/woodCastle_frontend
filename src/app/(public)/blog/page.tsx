@@ -1,3 +1,4 @@
+import { ShareButton } from "@/components/ShareButton";
 import { excerptFromHtml, getBlogPosts, siteInfo } from "@/lib/api";
 import { publicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
@@ -57,7 +58,9 @@ export default async function BlogPage({ searchParams }: Props) {
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     />
                   </div>
-                  <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wider text-brown-light">
+                </Link>
+                <div className="mt-4 flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wider text-brown-light">
                     <span className="rounded bg-gold-light/70 px-2 py-0.5 text-brown-dark">
                       Studio
                     </span>
@@ -69,6 +72,13 @@ export default async function BlogPage({ searchParams }: Props) {
                     <span aria-hidden>·</span>
                     <span>{siteInfo.name}</span>
                   </div>
+                  <ShareButton
+                    title={post.title}
+                    urlPath={`/blog/${post.slug}`}
+                    className="shrink-0"
+                  />
+                </div>
+                <Link href={`/blog/${post.slug}`} className="block">
                   <h2 className="mt-2 font-heading text-2xl text-brown-dark transition-colors group-hover:text-gold">
                     {post.title}
                   </h2>

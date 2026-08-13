@@ -1,4 +1,5 @@
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { ShareButton } from "@/components/ShareButton";
 import { excerptFromHtml, getBlogPostBySlug, getBlogPosts } from "@/lib/api";
 import { articleJsonLd, JsonLd, publicPageMetadata } from "@/lib/seo";
 import { format } from "date-fns";
@@ -56,14 +57,23 @@ export default async function BlogPostPage({ params }: Props) {
           ]}
         />
         <header className="mt-8">
-          {post.publishedAt && (
-            <time
-              dateTime={post.publishedAt}
-              className="text-xs font-medium uppercase tracking-wider text-brown-light"
-            >
-              {format(new Date(post.publishedAt), "MMMM d, yyyy")}
-            </time>
-          )}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            {post.publishedAt ? (
+              <time
+                dateTime={post.publishedAt}
+                className="text-xs font-medium uppercase tracking-wider text-brown-light"
+              >
+                {format(new Date(post.publishedAt), "MMMM d, yyyy")}
+              </time>
+            ) : (
+              <span />
+            )}
+            <ShareButton
+              title={post.title}
+              urlPath={`/blog/${slug}`}
+              variant="label"
+            />
+          </div>
           <h1 className="mt-3 font-heading text-4xl sm:text-5xl">{post.title}</h1>
           <p className="mt-4 text-lg text-brown-mid">{excerpt}</p>
         </header>

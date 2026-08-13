@@ -80,48 +80,50 @@ export function ShareButton({
   const whatsappHref = `https://wa.me/?text=${encodeURIComponent(`${title} — ${absoluteUrl(urlPath)}`)}`;
 
   return (
-    <div className={cn("relative", className)} ref={rootRef}>
-      <button
-        type="button"
-        onClick={share}
-        aria-label={`Share ${title}`}
-        className={cn(
-          "inline-flex items-center justify-center rounded-lg border border-brown-light/60 bg-white/95 text-brown-dark shadow-sm transition-colors hover:border-gold hover:text-gold",
-          variant === "label" ? "gap-2 px-3 py-2 text-sm font-semibold" : "h-9 w-9"
+    <div className={className} ref={rootRef}>
+      <div className="relative">
+        <button
+          type="button"
+          onClick={share}
+          aria-label={`Share ${title}`}
+          className={cn(
+            "inline-flex items-center justify-center rounded-lg border border-brown-light/60 bg-white/95 text-brown-dark shadow-sm transition-colors hover:border-gold hover:text-gold",
+            variant === "label" ? "gap-2 px-3 py-2 text-sm font-semibold" : "h-9 w-9"
+          )}
+        >
+          <Share2 size={16} />
+          {variant === "label" && <span>Share</span>}
+        </button>
+
+        {open && !nativeShare && (
+          <div className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-xl border border-brown-light/50 bg-white py-1 shadow-lg">
+            <a
+              href={whatsappHref}
+              target="_blank"
+              rel="noreferrer"
+              className="block px-3 py-2 text-sm text-brown-dark hover:bg-cream hover:text-gold"
+              onClick={() => setOpen(false)}
+            >
+              Share on WhatsApp
+            </a>
+            <button
+              type="button"
+              onClick={copyLink}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-brown-dark hover:bg-cream hover:text-gold"
+            >
+              <Copy size={14} />
+              Copy Link
+            </button>
+          </div>
         )}
-      >
-        <Share2 size={16} />
-        {variant === "label" && <span>Share</span>}
-      </button>
 
-      {open && !nativeShare && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-xl border border-brown-light/50 bg-white py-1 shadow-lg">
-          <a
-            href={whatsappHref}
-            target="_blank"
-            rel="noreferrer"
-            className="block px-3 py-2 text-sm text-brown-dark hover:bg-cream hover:text-gold"
-            onClick={() => setOpen(false)}
-          >
-            Share on WhatsApp
-          </a>
-          <button
-            type="button"
-            onClick={copyLink}
-            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-brown-dark hover:bg-cream hover:text-gold"
-          >
-            <Copy size={14} />
-            Copy Link
-          </button>
-        </div>
-      )}
-
-      {copied && (
-        <p className="absolute right-0 top-full z-50 mt-2 flex items-center gap-1.5 rounded-lg bg-brown-dark px-3 py-1.5 text-xs font-medium text-cream shadow-lg">
-          <Check size={12} />
-          Link copied
-        </p>
-      )}
+        {copied && (
+          <p className="absolute right-0 top-full z-50 mt-2 flex items-center gap-1.5 rounded-lg bg-brown-dark px-3 py-1.5 text-xs font-medium text-cream shadow-lg">
+            <Check size={12} />
+            Link copied
+          </p>
+        )}
+      </div>
     </div>
   );
 }
