@@ -100,7 +100,9 @@ export type SiteInfo = {
   email: string;
   address: string;
   city: string;
+  postalCode: string;
   whatsapp: string;
+  mapsUrl: string;
   mapEmbedUrl: string;
   establishedYear: string;
 };

@@ -58,8 +58,20 @@ This section maps GearO's layout structure onto Woodcastle's existing pages/feat
 ### 3.1 Header
 
 - Slim **top utility bar**: left — a short trust line (e.g. "Handcrafted Wood Furniture Since [year]"); right — About / Contact / Store Location links (only if applicable)
-- **Main header row**: logo (center or left), primary nav with category **mega-menu dropdown** — showing Woodcastle's actual 11 main categories (Sofa & Sofa Sets, Chairs, Tables, Dining Furniture, Bedroom Furniture, Living Room Furniture, Storage Furniture, Office Furniture, Outdoor Furniture, Kids Furniture, Home Décor & Accessories), each expanding to its subcategories on hover/tap (matching GearO's dropdown-with-thumbnails style), search icon, and an "Enquire Now" quick-access icon/button in place of GearO's wishlist/cart icons
+- **Main header row**: logo (center or left), primary nav with category **mega-menu dropdown** — showing Woodcastle's actual 11 main categories (Sofa & Sofa Sets, Chairs, Tables, Dining Furniture, Bedroom Furniture, Living Room Furniture, Storage Furniture, Office Furniture, Outdoor Furniture, Kids Furniture, Home Décor & Accessories), each expanding to its subcategories on hover/tap (matching GearO's dropdown-with-thumbnails style), **search icon** (see 3.1a), and an "Enquire Now" quick-access icon/button in place of GearO's wishlist/cart icons
 - Mobile: hamburger menu opening a full-screen/off-canvas nav, same category structure collapsed into an accordion
+
+### 3.1a Site Search & Category Filter
+
+- Clicking the header search icon opens a search overlay/bar (full-width dropdown on desktop, full-screen on mobile) with: a **text input** (product name search) and a **category filter dropdown** (main categories, or subcategories for more precision) — both optional, either can be used alone
+- **Live suggestions as the user types:** debounce the text input (~300ms after the last keystroke, don't fire on every character), then call `GET /api/products?search=<query>&limit=5` and show the results in a dropdown directly under the input — each suggestion shows the product's thumbnail, name, and price, and is clickable straight to `/product/[slug]`. Also match the query against the already-loaded category list (client-side, no extra API call needed — the mega-menu's category tree is already in memory) and show up to 3 matching category/subcategory names above or below the product suggestions, each linking straight to that category page
+- End the suggestions dropdown with a **"View all results for '<query>'"** link/row that submits the full search (same as pressing Enter), for when the customer wants more than the 5 quick suggestions
+- No results while typing → show a plain "No matches yet" state in the dropdown rather than an empty box, so it doesn't look broken
+- Suggestions dropdown closes on selecting a result, pressing Escape, or clicking outside it
+- Submitting navigates to `/search?q=<query>&category=<slug>`, which calls `GET /api/products?search=<query>&category=<slug>&page=&limit=` and renders results using the same product grid/card component as category pages, with the same "Load More" pagination
+- If only a category is selected with no text query, this behaves the same as visiting that category's page directly — no need for a separate code path
+- Empty results (on the full results page, not the suggestions dropdown) show a clear "No products found" state with a suggestion to browse categories instead, not a blank page
+- On the results page, both the search input and category filter stay visible/editable so the customer can refine without going back to the homepage
 
 ### 3.2 Homepage Section Order
 
@@ -90,12 +102,22 @@ Matches GearO's card structure minus commerce actions:
 - Product name
 - Price
 - **"Enquire Now"** button (appears on hover on desktop, always visible on mobile) — replaces "Add to Cart"
+- **Share icon** — small icon button in a corner of the card (e.g. top-right, over the image), separate from "Enquire Now"; see 3.4a for behavior
 - No wishlist heart icon, no compare icon, no discount badge (since per-product sale pricing isn't modeled yet)
+
+### 3.4a Share Button Behavior (product card + product detail page)
+
+One share button appears on every product card and on the product detail page (near the price/enquiry area). Behavior:
+
+- **On mobile** (where the Web Share API is available): tapping it calls `navigator.share({ title, text, url })` with the product name and page URL — this opens the device's native share sheet, letting the customer pick WhatsApp, Instagram, SMS, etc. directly. No custom UI needed here beyond the button itself.
+- **On desktop** (where `navigator.share` usually isn't available): tapping it opens a small dropdown/popover with two options: **"Share on WhatsApp"** (opens a `wa.me` link pre-filled with the product name and URL, same click-to-chat pattern as the enquiry flow) and **"Copy Link"** (copies the product URL to the clipboard, with a brief "Link copied" confirmation toast).
+- Feature-detect `navigator.share` to decide which behavior to use — don't hardcode by screen width, since availability varies by browser, not just device size.
+- The image showing up correctly when a copied link is pasted into WhatsApp (or shared via the native sheet) depends entirely on the product page's Open Graph image tag being set correctly — see section 5's SEO checklist. The share button itself doesn't attach an image; the link preview does that automatically once `og:image` is right.
 
 ### 3.5 Product Detail Page (`/product/[slug]`)
 
 - Left: image gallery with thumbnail strip (GearO's "Product Thumbnails" layout) — main image + clickable thumbnails, matching the reference's gallery pattern
-- Right: product name, price, short description, key details (material/dimensions if provided), then the **enquiry form** in place of GearO's Add to Cart / quantity selector / Buy It Now block
+- Right: product name, price, short description, key details (material/dimensions if provided), **Share button** (see 3.4a) placed near the price, then the **enquiry form** in place of GearO's Add to Cart / quantity selector / Buy It Now block
 - Below the fold: full description, then a "You May Also Like" row (related products from the same category) — reusing GearO's related-products pattern, sourced from the same `categoryId`
 
 ### 3.6 Blog Pages
@@ -106,7 +128,7 @@ Matches GearO's card structure minus commerce actions:
 ### 3.7 Footer
 
 - Top row: brand stat row (see 3.2.10 / 3.8)
-- Multi-column footer: **Information** (About, Blog, Store Location if applicable), **Customer Services** (Contact Us, Terms & Conditions), and a **contact block** (phone, email/WhatsApp)
+- Multi-column footer: **Information** (About, Blog, Store Location if applicable), **Customer Services** (Contact Us, Terms & Conditions), and a **contact block** (phone +91 9074119382, email woodcastlechevoor@gmail.com — see 3.8a)
 - Short legacy line above the copyright row, e.g. "44 Years of Trusted Craftsmanship — Chevoor, Thrissur, Kerala"
 - Newsletter signup bar is **optional** — only include if the client wants an email list; not in original requirements, so flagged here rather than assumed
 - Social icons row
@@ -134,6 +156,19 @@ Actual brand facts to use across the site (replacing placeholder copy anywhere i
 
 **Where this content lives:** these are static brand facts, not admin-managed dynamic data (they won't change often). They can live in the existing `StaticPage` model (`about` key) for the About page's long-form version, with the short stat-strip versions hardcoded in the homepage/footer components — no new backend model needed. If the client wants to edit these stat numbers from the admin panel later without a code change, that's a small addition to the existing `pages` module (adding a `home-highlights` key), not a new feature.
 
+### 3.8a Actual Contact Details
+
+- **Google Maps location:** https://maps.app.goo.gl/5v3tCVPo1BKsiqkYA — use this as the "Get Directions" link on the Contact page (either a direct link/button, or embedded as a Google Maps iframe using this same location)
+- **Email:** woodcastlechevoor@gmail.com
+- **Phone:** +91 9074119382
+
+**Where these appear:**
+- **Contact page (`/contact`):** phone (tap-to-call on mobile via `tel:+919074119382`), email (mailto: link), and the embedded map/directions link
+- **Footer contact block:** phone and email, alongside the legacy line from 3.8
+- **Header top utility bar (3.1):** consider adding the phone number here too, since a furniture shop's customers often prefer to call directly rather than fill a form
+- **JSON-LD `LocalBusiness` schema (contact page):** `telephone`, `email`, and address — since a real physical location now exists, this schema is no longer optional/conditional (as it was phrased in section 4's table), it should be implemented
+- **WhatsApp:** confirm with the client whether `+91 9074119382` is the same number that should be used as `WHATSAPP_ADMIN_NUMBER` in the backend, or if enquiries should route to a different number — worth checking before hardcoding this number into the enquiry flow's `wa.me` links
+
 
 
 ## 4. Site Structure & Pages
@@ -146,10 +181,11 @@ Actual brand facts to use across the site (replacing placeholder copy anywhere i
 | `/category/[slug]` | Category listing — see section 3.3 | Dynamic `metaTitle`/`metaDescription` from backend; JSON-LD `BreadcrumbList` |
 | `/product/[slug]` | Product detail — see section 3.5 | JSON-LD `Product` schema (name, image, description, price); this is the money page for SEO |
 | `/about` | About Us — 44-year brand history, Thrissur Chevoor origin story, 100% teak wood commitment (see 3.8) | Long-form content block (SEO value) |
-| `/contact` | Contact Us — address, phone, map embed, contact form | JSON-LD `LocalBusiness` schema if there's a physical store |
+| `/contact` | Contact Us — real address/map, phone, email (see 3.8a), contact form | JSON-LD `LocalBusiness` schema |
 | `/blog` | Blog listing — see section 3.6 | Paginated, `metaTitle`/`metaDescription` per listing |
 | `/blog/[slug]` | Blog post — see section 3.6 | JSON-LD `Article` schema |
 | `/offers` | Active offers/promotions page | Pulls from `/api/offers` |
+| `/search` | Search results — see 3.1a | `?q=` and `?category=` query params drive the results; noindex via meta tag is worth considering here to avoid thin/duplicate search-result pages competing with real category pages in Google |
 | `/terms-and-conditions` | Terms & Conditions | Static content page |
 
 ### Admin Panel
@@ -159,14 +195,14 @@ Actual brand facts to use across the site (replacing placeholder copy anywhere i
 | `/admin/login` | Username + password, then TOTP code screen if 2FA enabled |
 | `/admin/2fa-setup` | QR code display + confirmation, for enabling Google Authenticator |
 | `/admin` | Dashboard — recent enquiries count, quick links |
-| `/admin/products` | Product list, search/filter, **Edit and Delete action per row** (Delete opens a confirmation dialog before calling the DELETE endpoint) |
-| `/admin/products/new`, `/admin/products/[id]/edit` | Product form: name, description, price, **category selector — must list SUBCATEGORIES ONLY (leaf level), grouped by main category using `<optgroup>` or similar** (e.g. "Chairs" group header, with "Dining Chair," "Arm Chair," etc. selectable underneath) — sourced by fetching `GET /api/categories` (the nested tree) and flattening every main category's `children` array into this grouped list; selecting one sets the product's `categoryId` to that subcategory's `id`, never a main category's `id`. Images (drag-drop upload to Cloudinary), SEO fields (metaTitle/metaDescription) |
-| `/admin/categories` | Category list + create/edit modal — **includes image upload** (same drag-and-drop, direct-to-Cloudinary signed upload widget as the product form, not a paste-a-URL field), plus name, **Parent Category dropdown — sourced by fetching `GET /api/categories` and showing only TOP-LEVEL categories (`parentId: null`) plus a "None (top-level category)" option at the top**; selecting a value sets `parentId` on save, selecting "None" sends `parentId: null`. Also includes SEO fields. **Delete action per row** with confirmation — deleting a category with products or subcategories attached should warn the admin and block the delete until those are reassigned or removed |
+| `/admin/products` | Product list — **search box** (matches name/description via `GET /api/admin/products?search=`) plus a **category filter dropdown** (subcategories, grouped by main category same as the product form), **Edit and Delete action per row** (Delete opens a confirmation dialog before calling the DELETE endpoint) |
+| `/admin/products/new`, `/admin/products/[id]/edit` | Product form: name, description, price, **category selector — must list SUBCATEGORIES ONLY (leaf level), grouped by main category using `<optgroup>` or similar** (e.g. "Chairs" group header, with "Dining Chair," "Arm Chair," etc. selectable underneath) — sourced by fetching `GET /api/admin/categories` (the nested tree) and flattening every main category's `children` array into this grouped list; selecting one sets the product's `categoryId` to that subcategory's `id`, never a main category's `id`. Images (drag-drop upload to Cloudinary), SEO fields (metaTitle/metaDescription) |
+| `/admin/categories` | Category list — **search box** (`GET /api/admin/categories?search=`, matches name at either level) — plus create/edit modal — **includes image upload** (same drag-and-drop, direct-to-Cloudinary signed upload widget as the product form, not a paste-a-URL field), plus name, **Parent Category dropdown — sourced by fetching `GET /api/admin/categories` and showing only TOP-LEVEL categories (`parentId: null`) plus a "None (top-level category)" option at the top**; selecting a value sets `parentId` on save, selecting "None" sends `parentId: null`. Also includes SEO fields. **Delete action per row** with confirmation — deleting a category with products or subcategories attached should warn the admin and block the delete until those are reassigned or removed |
 | `/admin/products/import` | Bulk import — upload the .xlsx template, review a preview of changes/errors, confirm |
-| `/admin/blog` | Blog post list, **Edit and Delete action per row** |
+| `/admin/blog` | Blog post list — **search box** (`GET /api/admin/blog?search=`, matches title) plus a **Published/Draft filter**, **Edit and Delete action per row** |
 | `/admin/blog/new`, `/admin/blog/[id]/edit` | Rich text editor (e.g. Tiptap) for post content, cover image upload, SEO fields |
-| `/admin/offers` | Offers list + create/edit (banner image, discount text, active window) |
-| `/admin/enquiries` | Enquiry inbox — filterable by status (new/contacted/closed), click to view full details and mark status |
+| `/admin/offers` | Offers list — **search box** (`GET /api/admin/offers?search=`, matches title) plus an **Active/Inactive filter** — create/edit (banner image, discount text, active window) |
+| `/admin/enquiries` | Enquiry inbox — **search box** (`GET /api/admin/enquiries?search=`, matches customer name/phone/product name) plus **filterable by status** (new/contacted/closed), click to view full details and mark status |
 | `/admin/settings` | Change password, enable/disable 2FA |
 
 **Domain note:** this lives at `yourdomain.com/admin` — since it's the same Next.js app, this is just a route group (`app/admin/`) with its own layout, separate from the public site's layout, protected by a middleware check on the admin JWT cookie.
@@ -179,8 +215,8 @@ Actual brand facts to use across the site (replacing placeholder copy anywhere i
 - `sitemap.xml` — generate dynamically via `app/sitemap.ts`, pulling **every** product, **every** category at both levels (main categories *and* subcategories — a subcategory like `/category/dining-chair` is a real indexable page and must be included, not just the 11 main category URLs), and every published blog post slug from the backend at build/revalidate time
 - `robots.txt` — allow all public routes, disallow `/admin/*`
 - Canonical URLs on every page
-- JSON-LD structured data: `Organization` (home), `Product` (product pages), `BreadcrumbList` (category/product), `Article` (blog posts), `LocalBusiness` (contact, if applicable)
-- Open Graph + Twitter Card meta tags on every page, using product/blog images where relevant
+- JSON-LD structured data: `Organization` (home), `Product` (product pages), `BreadcrumbList` (category/product), `Article` (blog posts), `LocalBusiness` (contact page — see 3.8a for the real phone/email/address to use)
+- Open Graph + Twitter Card meta tags on every page. **Product pages specifically need `openGraph.images` set to the product's primary image** (absolute URL, ideally the image at a size close to 1200×630 or Cloudinary-transformed to that ratio) — this is what makes the image actually appear when a product link is pasted into WhatsApp, or shared anywhere else that generates a link preview. A missing or relative-path `og:image` is the most common reason a shared link shows no image.
 - Semantic HTML: one `<h1>` per page, proper heading hierarchy, `alt` text on every product image (pull from product name)
 - Core Web Vitals: `next/image` for automatic lazy-loading and responsive sizing; avoid layout shift by always specifying image dimensions
 - Static generation (`generateStaticParams`) for product/category/blog pages with ISR (`revalidate: 3600` or similar) so pages are fast *and* stay current as the admin adds products

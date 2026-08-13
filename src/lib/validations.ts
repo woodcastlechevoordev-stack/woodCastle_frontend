@@ -27,26 +27,26 @@ export const totpSchema = z.object({
 });
 
 export const productFormSchema = z.object({
-  name: z.string().min(2),
-  slug: z.string().min(2),
-  description: z.string().min(10),
+  name: z.string().trim().min(2),
+  slug: z.string().trim().min(2),
+  description: z.string().trim().min(10),
   price: z.coerce.number().positive(),
   compareAtPrice: z.coerce.number().positive().optional().or(z.literal("")),
   categoryId: z.string().min(1),
   featured: z.boolean(),
   inStock: z.boolean(),
-  metaTitle: z.string().min(2),
-  metaDescription: z.string().min(10),
+  metaTitle: z.string().trim().min(2, "Meta title is required"),
+  metaDescription: z.string().trim().min(10, "Meta description must be at least 10 characters"),
 });
 
 export const categoryFormSchema = z.object({
-  name: z.string().min(2),
-  slug: z.string().min(2),
+  name: z.string().trim().min(2),
+  slug: z.string().trim().min(2),
   description: z.string().optional(),
   parentId: z.string().optional().or(z.literal("")),
   imageUrl: z.string().optional(),
-  metaTitle: z.string().min(2),
-  metaDescription: z.string().min(10),
+  metaTitle: z.string().trim().min(2, "Meta title is required"),
+  metaDescription: z.string().trim().min(10, "Meta description must be at least 10 characters"),
 });
 
 export const offerFormSchema = z.object({

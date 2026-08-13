@@ -8,7 +8,9 @@
     "build": "next build",
     "build:prod": "NEXT_PUBLIC_API_URL=https://woodcastle-backend.onrender.com next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed --workers=1"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
@@ -27,6 +29,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

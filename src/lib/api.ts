@@ -16,14 +16,16 @@ export const REVALIDATE = 60;
 export const siteInfo: SiteInfo = {
   name: process.env.NEXT_PUBLIC_SITE_NAME || "Woodcastle",
   tagline: process.env.NEXT_PUBLIC_SITE_TAGLINE || brand.tagline,
-  phone: "+91 98765 43210",
-  email: "hello@woodcastle.in",
+  phone: "+91 9074119382",
+  email: "woodcastlechevoor@gmail.com",
   address: "Chevoor",
   city: "Thrissur, Kerala",
-  whatsapp: "919876543210",
+  postalCode: "680027",
+  whatsapp: "919074119382",
   establishedYear: process.env.NEXT_PUBLIC_ESTABLISHED_YEAR || brand.establishedYear,
+  mapsUrl: "https://maps.app.goo.gl/5v3tCVPo1BKsiqkYA",
   mapEmbedUrl:
-    "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3926.2!2d76.214!3d10.452!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTDCsDI3JzA3LjIiTiA3NsKwMTInNTAuNCJF!5e0!3m2!1sen!2sin!4v1",
+    "https://maps.google.com/maps?q=Wood+Castle,+Chevoor,+Thrissur,+Kerala+680027&hl=en&z=16&output=embed",
 };
 
 export function getSiteUrl(): string {
@@ -54,7 +56,7 @@ export function excerptFromHtml(html: string, max = 160): string {
 
 const revalidateOpt = { next: { revalidate: REVALIDATE } } as const;
 
-function unwrapItems<T>(data: T[] | { items?: T[] } | null | undefined): T[] {
+export function unwrapItems<T>(data: T[] | { items?: T[] } | null | undefined): T[] {
   if (!data) return [];
   if (Array.isArray(data)) return data;
   return Array.isArray(data.items) ? data.items : [];
@@ -121,13 +123,27 @@ export async function getCategoryWithProducts(slug: string): Promise<
 
 export async function getProducts(options?: {
   categorySlug?: string;
+  search?: string;
+  category?: string;
+  page?: number;
+  limit?: number;
 }): Promise<Product[]> {
   try {
-    const qs = options?.categorySlug
-      ? `?categorySlug=${encodeURIComponent(options.categorySlug)}`
-      : "";
+    const qs = new URLSearchParams();
+    const category = options?.category || options?.categorySlug;
+    if (options?.search) qs.set("search", options.search);
+    if (category) {
+      qs.set("category", category);
+      qs.set("categorySlug", category);
+    }
+    if (options?.page) qs.set("page", String(options.page));
+    if (options?.limit) qs.set("limit", String(options.limit));
+    const query = qs.toString();
     return unwrapItems(
-      await backendFetch<Product[] | { items: Product[] }>(`/api/products${qs}`, revalidateOpt)
+      await backendFetch<Product[] | { items: Product[] }>(
+        `/api/products${query ? `?${query}` : ""}`,
+        revalidateOpt
+      )
     );
   } catch {
     return [];

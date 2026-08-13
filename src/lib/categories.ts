@@ -87,11 +87,20 @@ export function nestCategories(categories: Category[]): Category[] {
 
 function flattenShallow(categories: Category[]): Category[] {
   const byId = new Map<string, Category>();
-  function walk(list: Category[]) {
+  function walk(list: Category[], parent?: Category) {
     for (const c of list) {
-      const { children: _children, ...rest } = c;
-      byId.set(c.id, rest as Category);
-      if (c.children?.length) walk(c.children);
+      const { children, ...rest } = c;
+      const node: Category = {
+        ...rest,
+        parentId: rest.parentId ?? parent?.id ?? null,
+        parent:
+          rest.parent ??
+          (parent
+            ? { id: parent.id, name: parent.name, slug: parent.slug }
+            : rest.parent ?? null),
+      };
+      byId.set(c.id, node);
+      if (children?.length) walk(children, node);
     }
   }
   walk(categories);
@@ -129,6 +138,15 @@ export function getLeafCategories(categories: Category[]): Category[] {
   return leaves;
 }
 
+export function subcategoryGroups(
+  categories: Category[]
+): { main: string; children: Category[] }[] {
+  const tree = nestCategories(categories);
+  return tree
+    .filter((main) => (main.children?.length ?? 0) > 0)
+    .map((main) => ({ main: main.name, children: main.children! }));
+}
+
 export function findCategoryBySlug(
   categories: Category[],
   slug: string
@@ -150,4 +168,23 @@ export function findCategoryBySlug(
 /** Flatten a nested category tree (or mixed list) into a unique list by id. */
 export function flattenCategories(categories: Category[]): Category[] {
   return flattenShallow(categories);
+}
+
+/** Client-side category name match for search suggestions (spec §3.1a). */
+export function matchCategoriesByQuery(
+  categories: Category[],
+  query: string,
+  limit = 3
+): Category[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  const nested = categories.some((c) => (c.children?.length ?? 0) > 0)
+    ? categories
+    : nestCategories(categories);
+  return flattenCategories(nested)
+    .filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) || c.slug.toLowerCase().includes(q)
+    )
+    .slice(0, limit);
 }

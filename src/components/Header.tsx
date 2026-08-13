@@ -1,12 +1,13 @@
 "use client";
 
+import { SearchOverlay } from "@/components/SearchOverlay";
+import { SiteLogo } from "@/components/SiteLogo";
 import { siteInfo } from "@/lib/api";
 import { getTopLevelCategories } from "@/lib/categories";
 import { FALLBACK_IMAGE, safeImageUrl } from "@/lib/images";
 import type { Category } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { SiteLogo } from "@/components/SiteLogo";
-import { ChevronDown, Menu, MessageCircle, Search, X } from "lucide-react";
+import { ChevronDown, Menu, MessageCircle, Phone, Search, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -32,26 +33,10 @@ export function Header({ categories }: HeaderProps) {
   const [collectionsOpen, setCollectionsOpen] = useState(false);
   const [mobileExpandedId, setMobileExpandedId] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [query, setQuery] = useState("");
   const megaRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
 
   const mains = useMemo(() => getTopLevelCategories(categories), [categories]);
-
-  const searchable = useMemo(() => {
-    const list: Category[] = [];
-    for (const main of mains) {
-      list.push(main);
-      if (main.children?.length) list.push(...main.children);
-    }
-    return list;
-  }, [mains]);
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return searchable.slice(0, 8);
-    return searchable.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 8);
-  }, [searchable, query]);
 
   const activeMain =
     mains.find((c) => c.id === activeMainId) ?? mains[0] ?? null;
@@ -75,16 +60,36 @@ export function Header({ categories }: HeaderProps) {
       if (megaRef.current && !megaRef.current.contains(target)) setMegaOpen(false);
       if (searchRef.current && !searchRef.current.contains(target)) setSearchOpen(false);
     }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setSearchOpen(false);
+        setMegaOpen(false);
+        setOpen(false);
+      }
+    }
     document.addEventListener("mousedown", onDocClick);
-    return () => document.removeEventListener("mousedown", onDocClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("keydown", onKey);
+    };
   }, []);
 
   return (
     <header className="sticky top-0 z-50">
-      <div className="hidden border-b border-brown-light/30 bg-brown-dark text-cream/80 sm:block">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2 text-xs sm:px-6 lg:px-8">
-          <p>Handcrafted Wood Furniture Since {siteInfo.establishedYear}</p>
-          <nav className="flex items-center gap-5">
+      <div className="border-b border-brown-light/30 bg-brown-dark text-cream/80">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-2 text-xs sm:px-6 lg:px-8">
+          <p className="hidden sm:block">
+            Handcrafted Wood Furniture Since {siteInfo.establishedYear}
+          </p>
+          <a
+            href={`tel:${siteInfo.phone.replace(/\s/g, "")}`}
+            className="inline-flex items-center gap-1.5 transition-colors hover:text-gold"
+          >
+            <Phone size={12} />
+            {siteInfo.phone}
+          </a>
+          <nav className="hidden items-center gap-5 sm:flex">
             {utilityLinks.map((link) => (
               <Link
                 key={link.href}
@@ -98,7 +103,10 @@ export function Header({ categories }: HeaderProps) {
         </div>
       </div>
 
-      <div className="border-b border-brown-light/40 bg-cream/95 backdrop-blur-sm">
+      <div
+        className="relative border-b border-brown-light/40 bg-cream/95 backdrop-blur-sm"
+        ref={searchRef}
+      >
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:h-[5.25rem] lg:px-8">
           <SiteLogo variant="header" priority />
 
@@ -262,44 +270,15 @@ export function Header({ categories }: HeaderProps) {
           </nav>
 
           <div className="flex items-center gap-1 sm:gap-2">
-            <div className="relative" ref={searchRef}>
-              <button
-                type="button"
-                aria-label="Search collections"
-                onClick={() => setSearchOpen((v) => !v)}
-                className="rounded-lg p-2 text-brown-dark transition-colors hover:bg-brown-light/20 hover:text-gold"
-              >
-                <Search size={20} />
-              </button>
-              {searchOpen && (
-                <div className="absolute right-0 top-full z-50 mt-2 w-72 rounded-xl border border-brown-light/50 bg-white p-3 shadow-lg">
-                  <input
-                    autoFocus
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Search collections…"
-                    className="w-full rounded-lg border border-brown-light/60 bg-cream px-3 py-2 text-sm text-brown-dark outline-none focus:border-gold"
-                  />
-                  <ul className="mt-2 max-h-56 overflow-auto">
-                    {filtered.length === 0 ? (
-                      <li className="px-2 py-3 text-sm text-brown-mid">No matches</li>
-                    ) : (
-                      filtered.map((c) => (
-                        <li key={c.id}>
-                          <Link
-                            href={`/category/${c.slug}`}
-                            className="block rounded-lg px-2 py-2 text-sm text-brown-dark hover:bg-cream hover:text-gold"
-                            onClick={() => setSearchOpen(false)}
-                          >
-                            {c.name}
-                          </Link>
-                        </li>
-                      ))
-                    )}
-                  </ul>
-                </div>
-              )}
-            </div>
+            <button
+              type="button"
+              aria-label="Search products"
+              aria-expanded={searchOpen}
+              onClick={() => setSearchOpen((v) => !v)}
+              className="rounded-lg p-2 text-brown-dark transition-colors hover:bg-brown-light/20 hover:text-gold"
+            >
+              <Search size={20} />
+            </button>
 
             <Link
               href="/contact"
@@ -319,6 +298,12 @@ export function Header({ categories }: HeaderProps) {
             </button>
           </div>
         </div>
+
+        <SearchOverlay
+          categories={categories}
+          open={searchOpen}
+          onClose={() => setSearchOpen(false)}
+        />
 
         {open && (
           <nav className="max-h-[calc(100vh-5rem)] overflow-y-auto border-t border-brown-light/40 bg-cream px-4 py-4 lg:hidden">

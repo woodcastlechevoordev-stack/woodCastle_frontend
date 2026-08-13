@@ -1,33 +1,49 @@
 "use client";
 
 import type { Enquiry, EnquiryStatus } from "@/lib/types";
+import { queryString, unwrapList, cn } from "@/lib/utils";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
 
 const statuses: Array<EnquiryStatus | "all"> = ["all", "new", "contacted", "closed"];
 
 export default function AdminEnquiriesPage() {
   const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
   const [filter, setFilter] = useState<(typeof statuses)[number]>("all");
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selected, setSelected] = useState<Enquiry | null>(null);
 
+  useEffect(() => {
+    const t = window.setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => window.clearTimeout(t);
+  }, [search]);
+
   async function load() {
-    const res = await fetch("/api/admin/enquiries");
+    const qs = queryString({
+      search: debouncedSearch || undefined,
+      status: filter === "all" ? undefined : filter,
+    });
+    const res = await fetch(`/api/admin/enquiries${qs}`);
     const data = await res.json();
-    if (Array.isArray(data)) setEnquiries(data);
+    setEnquiries(unwrapList<Enquiry>(data));
   }
 
   useEffect(() => {
     load();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, debouncedSearch]);
 
-  const filtered = useMemo(
-    () =>
-      filter === "all" ? enquiries : enquiries.filter((e) => e.status === filter),
-    [enquiries, filter]
-  );
+  const filtered = useMemo(() => {
+    const q = debouncedSearch.toLowerCase();
+    return enquiries.filter((e) => {
+      if (filter !== "all" && e.status !== filter) return false;
+      if (!q) return true;
+      const hay = `${e.name} ${e.phone} ${e.product?.name || ""}`.toLowerCase();
+      return hay.includes(q);
+    });
+  }, [enquiries, filter, debouncedSearch]);
 
   async function updateStatus(id: string, status: EnquiryStatus) {
     const res = await fetch(`/api/admin/enquiries/${id}`, {
@@ -47,7 +63,14 @@ export default function AdminEnquiriesPage() {
       <h1 className="font-heading text-3xl text-brown-dark">Enquiries</h1>
       <p className="mt-1 text-brown-mid">Inbox of product enquiries</p>
 
-      <div className="mt-6 flex flex-wrap gap-2">
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search name, phone, or product…"
+          className="w-full rounded-lg border border-brown-light bg-white px-3 py-2.5 text-sm text-brown-dark outline-none focus:border-gold sm:max-w-sm"
+        />
+        <div className="flex flex-wrap gap-2">
         {statuses.map((s) => (
           <button
             key={s}
@@ -63,6 +86,7 @@ export default function AdminEnquiriesPage() {
             {s}
           </button>
         ))}
+        </div>
       </div>
 
       <div className="mt-6 overflow-x-auto rounded-xl border border-brown-light bg-white shadow-sm">
@@ -96,6 +120,9 @@ export default function AdminEnquiriesPage() {
             ))}
           </tbody>
         </table>
+        {filtered.length === 0 && (
+          <p className="p-6 text-sm text-brown-mid">No enquiries match these filters.</p>
+        )}
       </div>
 
       {selected && (
