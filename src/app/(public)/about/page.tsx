@@ -5,7 +5,6 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
-import { TrustFeatures } from "@/components/TrustFeatures";
 
 export const revalidate = 60;
 
@@ -55,8 +54,6 @@ export default async function AboutPage() {
           </div>
         </div>
       </section>
-
-      <TrustFeatures variant="light" />
 
       <article className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
         <div

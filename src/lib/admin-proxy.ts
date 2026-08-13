@@ -2,6 +2,16 @@ import { getApiUrl } from "@/lib/backend";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
+function withForwardedQuery(req: NextRequest, backendPath: string): string {
+  const [path, existing] = backendPath.split("?");
+  const merged = new URLSearchParams(existing || "");
+  req.nextUrl.searchParams.forEach((value, key) => {
+    merged.set(key, value);
+  });
+  const qs = merged.toString();
+  return qs ? `${path}?${qs}` : path;
+}
+
 export async function proxyToBackend(
   req: NextRequest,
   backendPath: string,
@@ -11,7 +21,7 @@ export async function proxyToBackend(
     const jar = await cookies();
     const token = jar.get("admin_token")?.value;
 
-    const url = `${getApiUrl()}${backendPath}`;
+    const url = `${getApiUrl()}${withForwardedQuery(req, backendPath)}`;
     const hasBody =
       init?.body !== undefined || (req.method !== "GET" && req.method !== "HEAD");
 

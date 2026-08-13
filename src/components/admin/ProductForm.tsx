@@ -3,23 +3,31 @@
 import { CloudinaryImageUpload } from "@/components/admin/CloudinaryImageUpload";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
-import { getLeafCategories, nestCategories } from "@/lib/categories";
+import { getLeafCategories, subcategoryGroups } from "@/lib/categories";
 import type { Category } from "@/lib/types";
+import {
+  clearFormDraft,
+  readFormDraft,
+  slugify,
+  unwrapList,
+  writeFormDraft,
+} from "@/lib/utils";
 import { productFormSchema } from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 type Values = z.infer<typeof productFormSchema>;
 
-function subcategoryGroups(flat: Category[]): { main: string; children: Category[] }[] {
-  const tree = nestCategories(flat);
-  return tree
-    .filter((main) => (main.children?.length ?? 0) > 0)
-    .map((main) => ({ main: main.name, children: main.children! }));
-}
+const PRODUCT_DRAFT_KEY = "woodcastle:admin-product-draft";
+
+type ProductDraft = {
+  productId?: string;
+  values: Values;
+  images: string[];
+};
 
 export function ProductForm({
   defaultValues,
@@ -30,7 +38,9 @@ export function ProductForm({
 }) {
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
-  const [images, setImages] = useState<string[]>(defaultValues?.images ?? []);
+  const restoredDraft = useRef(false);
+  const initialImages = defaultValues?.images ?? [];
+  const [images, setImages] = useState<string[]>(initialImages);
   const [message, setMessage] = useState("");
 
   const form = useForm<Values>({
@@ -49,6 +59,7 @@ export function ProductForm({
       ...defaultValues,
     },
   });
+  const values = form.watch();
 
   const categoryGroups = useMemo(
     () => subcategoryGroups(categories),
@@ -59,31 +70,41 @@ export function ProductForm({
     fetch("/api/admin/categories")
       .then((r) => r.json())
       .then((data) => {
-        if (Array.isArray(data)) {
-          setCategories(data);
-          const leaves = getLeafCategories(data);
-          const current = form.getValues("categoryId");
-          if (!current && leaves[0]) {
-            form.setValue("categoryId", leaves[0].id);
-          }
+        const items = unwrapList<Category>(data);
+        setCategories(items);
+        const leaves = getLeafCategories(items);
+        const current = form.getValues("categoryId");
+        if (!current && leaves[0]) {
+          form.setValue("categoryId", leaves[0].id);
         }
       })
       .catch(() => undefined);
   }, [form]);
 
+  useEffect(() => {
+    if (!restoredDraft.current) {
+      restoredDraft.current = true;
+      const draft = readFormDraft<ProductDraft>(PRODUCT_DRAFT_KEY);
+      if (draft && draft.productId === productId) {
+        form.reset(draft.values);
+        setImages(draft.images);
+      }
+      return;
+    }
+    writeFormDraft(PRODUCT_DRAFT_KEY, {
+      productId,
+      values,
+      images,
+    } satisfies ProductDraft);
+  }, [form, images, productId, values]);
+
   function onNameBlur() {
     const name = form.getValues("name");
     if (!form.getValues("slug") && name) {
-      form.setValue(
-        "slug",
-        name
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/(^-|-$)/g, "")
-      );
+      form.setValue("slug", slugify(name), { shouldValidate: true });
     }
     if (!form.getValues("metaTitle") && name) {
-      form.setValue("metaTitle", `${name} | Woodcastle`);
+      form.setValue("metaTitle", `${name} | Woodcastle`, { shouldValidate: true });
     }
   }
 
@@ -124,19 +145,23 @@ export function ProductForm({
       return;
     }
     setMessage("Product saved");
+    clearFormDraft(PRODUCT_DRAFT_KEY);
     router.push("/admin/products");
-    router.refresh();
   }
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="mx-auto max-w-3xl space-y-6">
+    <form
+      onSubmit={form.handleSubmit(onSubmit, () => {
+        setMessage("Please fix the highlighted fields, including meta title and description.");
+      })}
+      className="mx-auto max-w-3xl space-y-6"
+    >
       <div className="grid gap-4 sm:grid-cols-2">
         <Input
           id="name"
           label="Name"
           error={form.formState.errors.name?.message}
-          {...form.register("name")}
-          onBlur={onNameBlur}
+          {...form.register("name", { onBlur: onNameBlur })}
         />
         <Input
           id="slug"
@@ -184,6 +209,9 @@ export function ProductForm({
           <p className="text-xs text-brown-light">
             Products must be assigned to a subcategory, not a main category.
           </p>
+          {form.formState.errors.categoryId && (
+            <p className="text-sm text-red-600">{form.formState.errors.categoryId.message}</p>
+          )}
         </div>
       </div>
 
@@ -204,18 +232,33 @@ export function ProductForm({
       <div className="rounded-xl border border-brown-light bg-white p-5">
         <p className="eyebrow">SEO</p>
         <div className="mt-4 space-y-4">
-          <Input id="metaTitle" label="Meta title" {...form.register("metaTitle")} />
+          <Input
+            id="metaTitle"
+            label="Meta title"
+            error={form.formState.errors.metaTitle?.message}
+            {...form.register("metaTitle")}
+          />
           <Textarea
             id="metaDescription"
             label="Meta description"
+            error={form.formState.errors.metaDescription?.message}
             {...form.register("metaDescription")}
           />
         </div>
       </div>
 
-      {message && <p className="text-sm text-brown-mid">{message}</p>}
+      {message && (
+        <p className="text-sm text-brown-mid" data-testid="product-form-message">
+          {message}
+        </p>
+      )}
       <div className="flex gap-3">
-        <Button type="submit" variant="gold" disabled={form.formState.isSubmitting}>
+        <Button
+          type="submit"
+          variant="gold"
+          disabled={form.formState.isSubmitting}
+          data-testid="product-save"
+        >
           {form.formState.isSubmitting ? "Saving…" : "Save product"}
         </Button>
         <Button type="button" variant="outline" onClick={() => router.back()}>

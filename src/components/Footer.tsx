@@ -94,11 +94,12 @@ export async function Footer() {
           <div>
             <p className="eyebrow text-gold-light">Contact</p>
             <ul className="mt-4 space-y-3 text-sm text-cream/80">
-              <li>{siteInfo.address}</li>
-              <li>{siteInfo.city}</li>
+              <li>
+                {siteInfo.address}, {siteInfo.city} {siteInfo.postalCode}
+              </li>
               <li className="flex items-center gap-2">
                 <Phone size={14} className="text-gold" />
-                <a href={`tel:${siteInfo.phone}`} className="hover:text-gold">
+                <a href={`tel:${siteInfo.phone.replace(/\s/g, "")}`} className="hover:text-gold">
                   {siteInfo.phone}
                 </a>
               </li>
@@ -110,12 +111,12 @@ export async function Footer() {
               </li>
               <li>
                 <a
-                  href={`https://wa.me/${siteInfo.whatsapp}`}
+                  href={siteInfo.mapsUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="font-semibold text-gold hover:underline"
                 >
-                  WhatsApp us
+                  Get Directions
                 </a>
               </li>
             </ul>

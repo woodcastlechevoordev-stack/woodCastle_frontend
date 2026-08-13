@@ -27,6 +27,7 @@ const sizes: Record<Size, string> = {
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "md", disabled, ...props }, ref) => (
     <button
+      {...props}
       ref={ref}
       disabled={disabled}
       className={cn(
@@ -35,7 +36,6 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         sizes[size],
         className
       )}
-      {...props}
     />
   )
 );

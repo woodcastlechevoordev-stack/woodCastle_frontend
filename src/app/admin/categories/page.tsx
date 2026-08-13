@@ -6,13 +6,39 @@ import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
 import { getTopLevelCategories, nestCategories } from "@/lib/categories";
 import type { Category } from "@/lib/types";
+import {
+  clearFormDraft,
+  readFormDraft,
+  slugify,
+  unwrapList,
+  writeFormDraft,
+} from "@/lib/utils";
 import { categoryFormSchema } from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 type Values = z.infer<typeof categoryFormSchema>;
+
+const CATEGORY_DRAFT_KEY = "woodcastle:admin-category-draft";
+
+type CategoryDraft = {
+  open: boolean;
+  editingId: string | null;
+  values: Values;
+  imageUrl: string | null;
+};
+
+const emptyValues: Values = {
+  name: "",
+  slug: "",
+  description: "",
+  parentId: "",
+  imageUrl: "",
+  metaTitle: "",
+  metaDescription: "",
+};
 
 function categoryBlockReason(cat: Category): string | null {
   const childCount = cat.children?.length ?? 0;
@@ -31,6 +57,7 @@ function categoryBlockReason(cat: Category): string | null {
 
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -38,16 +65,9 @@ export default function AdminCategoriesPage() {
 
   const form = useForm<Values>({
     resolver: zodResolver(categoryFormSchema),
-    defaultValues: {
-      name: "",
-      slug: "",
-      description: "",
-      parentId: "",
-      imageUrl: "",
-      metaTitle: "",
-      metaDescription: "",
-    },
+    defaultValues: emptyValues,
   });
+  const values = form.watch();
 
   const tree = useMemo(() => nestCategories(categories), [categories]);
   const mains = useMemo(() => getTopLevelCategories(tree), [tree]);
@@ -57,28 +77,63 @@ export default function AdminCategoriesPage() {
   );
 
   async function load() {
-    const res = await fetch("/api/admin/categories");
-    const data = await res.json();
-    if (Array.isArray(data)) setCategories(data);
+    try {
+      const qs = search.trim() ? `?search=${encodeURIComponent(search.trim())}` : "";
+      const res = await fetch(`/api/admin/categories${qs}`);
+      const data = await res.json();
+      const items = unwrapList<Category>(data);
+      if (search.trim()) {
+        const q = search.trim().toLowerCase();
+        const matched = items.filter((c) => c.name.toLowerCase().includes(q));
+        const ids = new Set(matched.map((c) => c.id));
+        for (const c of matched) {
+          if (c.parentId) ids.add(c.parentId);
+        }
+        setCategories(items.filter((c) => ids.has(c.id)));
+      } else {
+        setCategories(items);
+      }
+    } catch {
+      setError("Could not load categories. Try again.");
+    }
   }
 
+  const restoredDraft = useRef(false);
+
   useEffect(() => {
-    load();
-  }, []);
+    const t = window.setTimeout(() => {
+      load();
+    }, search ? 300 : 0);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
+
+  useEffect(() => {
+    if (!restoredDraft.current) {
+      restoredDraft.current = true;
+      const draft = readFormDraft<CategoryDraft>(CATEGORY_DRAFT_KEY);
+      if (draft?.open) {
+        setImageUrl(draft.imageUrl);
+        form.reset(draft.values);
+        setOpen(true);
+      }
+      return;
+    }
+    if (open) {
+      writeFormDraft(CATEGORY_DRAFT_KEY, {
+        open: true,
+        editingId: editing?.id ?? null,
+        values,
+        imageUrl,
+      } satisfies CategoryDraft);
+    }
+  }, [open, editing, values, imageUrl, form]);
 
   function openCreate() {
     setEditing(null);
     setError("");
     setImageUrl(null);
-    form.reset({
-      name: "",
-      slug: "",
-      description: "",
-      parentId: "",
-      imageUrl: "",
-      metaTitle: "",
-      metaDescription: "",
-    });
+    form.reset(emptyValues);
     setOpen(true);
   }
 
@@ -98,32 +153,90 @@ export default function AdminCategoriesPage() {
     setOpen(true);
   }
 
-  async function onSubmit(values: Values) {
+  function closeModal() {
+    setOpen(false);
+    setError("");
+    clearFormDraft(CATEGORY_DRAFT_KEY);
+  }
+
+  function readParentIdFromDom(fallback?: string) {
+    if (typeof document === "undefined") return fallback || "";
+    const el = document.getElementById("cat-parent") as HTMLSelectElement | null;
+    return (el?.value || fallback || "").trim();
+  }
+
+  useEffect(() => {
+    if (!open) return;
+    function syncFromDom() {
+      const parent = document.getElementById("cat-parent") as HTMLSelectElement | null;
+      if (parent) {
+        form.setValue("parentId", parent.value, { shouldDirty: true });
+      }
+      const fields = {
+        "cat-name": "name",
+        "cat-slug": "slug",
+        "cat-meta-title": "metaTitle",
+        "cat-meta-desc": "metaDescription",
+      } as const;
+      for (const [id, name] of Object.entries(fields)) {
+        const el = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null;
+        if (el) form.setValue(name, el.value);
+      }
+    }
+    document.addEventListener("visibilitychange", syncFromDom);
+    window.addEventListener("pageshow", syncFromDom);
+    window.addEventListener("focus", syncFromDom);
+    return () => {
+      document.removeEventListener("visibilitychange", syncFromDom);
+      window.removeEventListener("pageshow", syncFromDom);
+      window.removeEventListener("focus", syncFromDom);
+    };
+  }, [open, form]);
+
+  function onNameBlur() {
+    const name = form.getValues("name");
+    if (!form.getValues("slug") && name) {
+      form.setValue("slug", slugify(name), { shouldValidate: true });
+    }
+    if (!form.getValues("metaTitle") && name) {
+      form.setValue("metaTitle", `${name} | Woodcastle`, { shouldValidate: true });
+    }
+  }
+
+  async function onSubmit(formValues: Values) {
     setError("");
     const payload = {
-      name: values.name,
-      slug: values.slug,
-      description: values.description || undefined,
-      parentId: values.parentId ? values.parentId : null,
+      name: formValues.name,
+      slug: formValues.slug,
+      description: formValues.description || undefined,
+      parentId: readParentIdFromDom(formValues.parentId) || null,
       imageUrl: imageUrl || null,
-      metaTitle: values.metaTitle,
-      metaDescription: values.metaDescription,
+      metaTitle: formValues.metaTitle,
+      metaDescription: formValues.metaDescription,
     };
-    const res = await fetch(
-      editing ? `/api/admin/categories/${editing.id}` : "/api/admin/categories",
-      {
-        method: editing ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+    try {
+      const res = await fetch(
+        editing ? `/api/admin/categories/${editing.id}` : "/api/admin/categories",
+        {
+          method: editing ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || "Failed to save");
+        return;
       }
-    );
-    const data = await res.json();
-    if (!res.ok) {
-      setError(data.error || "Failed to save");
-      return;
+      clearFormDraft(CATEGORY_DRAFT_KEY);
+      setOpen(false);
+      form.reset(emptyValues);
+      setImageUrl(null);
+      setEditing(null);
+      await load();
+    } catch {
+      setError("Could not save. Check your connection and try again.");
     }
-    setOpen(false);
-    await load();
   }
 
   function CategoryActions({ cat, size = "sm" }: { cat: Category; size?: "sm" | "xs" }) {
@@ -166,12 +279,21 @@ export default function AdminCategoriesPage() {
             Manage the 11 main collections and their subcategories
           </p>
         </div>
-        <Button variant="gold" onClick={openCreate}>
+        <Button variant="gold" onClick={openCreate} data-testid="add-category">
           Add category
         </Button>
       </div>
 
-      <div className="mt-8 space-y-6">
+      <div className="mt-6">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search categories…"
+          className="w-full rounded-lg border border-brown-light bg-white px-3 py-2.5 text-sm text-brown-dark outline-none focus:border-gold sm:max-w-sm"
+        />
+      </div>
+
+      <div className="mt-6 space-y-6">
         {mains.map((main) => (
           <div
             key={main.id}
@@ -251,64 +373,114 @@ export default function AdminCategoriesPage() {
             ))}
           </div>
         )}
+        {mains.length === 0 && categories.length === 0 && (
+          <p className="rounded-xl border border-brown-light bg-white p-6 text-sm text-brown-mid">
+            No categories match this search.
+          </p>
+        )}
       </div>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-brown-dark/50 p-4">
-          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-6 shadow-lg">
-            <h3 className="font-heading text-2xl text-brown-dark">
-              {editing ? "Edit category" : "New category"}
-            </h3>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="mt-5 space-y-4">
-              <Input id="cat-name" label="Name" {...form.register("name")} />
-              <Input id="cat-slug" label="Slug" {...form.register("slug")} />
-              <div>
-                <label
-                  htmlFor="cat-parent"
-                  className="mb-1.5 block text-sm font-medium text-brown-dark"
-                >
-                  Parent category
-                </label>
-                <select
-                  id="cat-parent"
-                  className="w-full rounded-lg border border-brown-light bg-cream px-3 py-2.5 text-sm text-brown-dark outline-none focus:border-gold"
-                  {...form.register("parentId")}
-                >
-                  <option value="">None (top-level category)</option>
-                  {parentOptions.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-                <p className="mt-1 text-xs text-brown-light">
-                  Leave empty for a top-level collection; pick a parent to create a
-                  subcategory.
-                </p>
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-brown-dark/50 p-4"
+          data-testid="category-modal"
+        >
+          <div className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-xl bg-white shadow-lg">
+            <div className="border-b border-brown-light/40 px-6 py-4">
+              <h3 className="font-heading text-2xl text-brown-dark">
+                {editing ? "Edit category" : "New category"}
+              </h3>
+            </div>
+            <form
+              onSubmit={form.handleSubmit(onSubmit, () => {
+                setError("Please fix the highlighted fields, including meta title and description.");
+              })}
+              className="flex min-h-0 flex-1 flex-col"
+            >
+              <div className="space-y-4 overflow-y-auto px-6 py-5">
+                <Input
+                  id="cat-name"
+                  label="Name"
+                  error={form.formState.errors.name?.message}
+                  {...form.register("name", {
+                    onBlur: onNameBlur,
+                  })}
+                />
+                <Input
+                  id="cat-slug"
+                  label="Slug"
+                  error={form.formState.errors.slug?.message}
+                  {...form.register("slug")}
+                />
+                <div>
+                  <label
+                    htmlFor="cat-parent"
+                    className="mb-1.5 block text-sm font-medium text-brown-dark"
+                  >
+                    Parent category
+                  </label>
+                  <select
+                    id="cat-parent"
+                    className="w-full rounded-lg border border-brown-light bg-cream px-3 py-2.5 text-sm text-brown-dark outline-none focus:border-gold"
+                    value={values.parentId || ""}
+                    onChange={(e) =>
+                      form.setValue("parentId", e.target.value, {
+                        shouldDirty: true,
+                        shouldTouch: true,
+                      })
+                    }
+                  >
+                    <option value="">None (top-level category)</option>
+                    {parentOptions.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-brown-light">
+                    Leave empty for a top-level collection; pick a parent to create a
+                    subcategory.
+                  </p>
+                </div>
+                <CloudinaryImageUpload
+                  mode="single"
+                  label="Category image"
+                  helpText="Drag and drop to upload the category tile image directly to Cloudinary."
+                  folder="woodcastle/categories"
+                  value={imageUrl}
+                  onChange={(url) => {
+                    setImageUrl(url);
+                    form.setValue("imageUrl", url || "", { shouldValidate: true });
+                  }}
+                />
+                <Input
+                  id="cat-meta-title"
+                  label="Meta title"
+                  error={form.formState.errors.metaTitle?.message}
+                  {...form.register("metaTitle")}
+                />
+                <Textarea
+                  id="cat-meta-desc"
+                  label="Meta description"
+                  error={form.formState.errors.metaDescription?.message}
+                  {...form.register("metaDescription")}
+                />
+                {error && (
+                  <p className="text-sm text-red-600" data-testid="category-form-error">
+                    {error}
+                  </p>
+                )}
               </div>
-              <CloudinaryImageUpload
-                mode="single"
-                label="Category image"
-                helpText="Drag and drop to upload the category tile image directly to Cloudinary."
-                folder="woodcastle/categories"
-                value={imageUrl}
-                onChange={(url) => {
-                  setImageUrl(url);
-                  form.setValue("imageUrl", url || "", { shouldValidate: true });
-                }}
-              />
-              <Input id="cat-meta-title" label="Meta title" {...form.register("metaTitle")} />
-              <Textarea
-                id="cat-meta-desc"
-                label="Meta description"
-                {...form.register("metaDescription")}
-              />
-              {error && <p className="text-sm text-red-600">{error}</p>}
-              <div className="flex gap-3 pt-2">
-                <Button type="submit" variant="gold">
-                  Save
+              <div className="flex gap-3 border-t border-brown-light/40 bg-white px-6 py-4">
+                <Button
+                  type="submit"
+                  variant="gold"
+                  disabled={form.formState.isSubmitting}
+                  data-testid="category-save"
+                >
+                  {form.formState.isSubmitting ? "Saving…" : "Save"}
                 </Button>
-                <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                <Button type="button" variant="outline" onClick={closeModal}>
                   Cancel
                 </Button>
               </div>

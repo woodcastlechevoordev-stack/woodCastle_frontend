@@ -40,3 +40,26 @@ export function safeImageUrls(
     .filter(Boolean);
   return cleaned.length ? cleaned : [fallback];
 }
+
+/**
+ * Product OG images should be close to 1200×630 so WhatsApp / social
+ * link previews show the photo instead of a cropped square or a missing image.
+ */
+export function ogImageUrl(url: string | null | undefined): string | undefined {
+  if (!url?.trim()) return undefined;
+  const safe = safeImageUrl(url, "");
+  if (!safe) return undefined;
+
+  const match = safe.match(
+    /^(https?:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/)(.+)$/i
+  );
+  if (!match) return safe;
+
+  const rest = match[2];
+  const firstSegment = rest.split("/")[0] ?? "";
+  const alreadyTransformed =
+    firstSegment.includes(",") || /^(c_|w_|h_|g_|f_|q_|e_)/.test(firstSegment);
+  if (alreadyTransformed) return safe;
+
+  return `${match[1]}c_fill,w_1200,h_630,g_auto/${rest}`;
+}

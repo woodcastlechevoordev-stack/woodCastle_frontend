@@ -1,4 +1,5 @@
 import { getSiteUrl, siteInfo } from "./api";
+import { ogImageUrl, safeImageUrl } from "./images";
 import type { Product } from "./types";
 import type { Metadata } from "next";
 
@@ -32,11 +33,15 @@ export function publicPageMetadata({
 }): Metadata {
   const title = pageTitle(metaTitle, name);
   const desc = description?.trim() || undefined;
-  const imageList = !images
-    ? undefined
+  const rawImages = !images
+    ? []
     : (Array.isArray(images) ? images : [images]).filter(
         (url): url is string => Boolean(url)
       );
+  const ogImages = rawImages
+    .map((url) => ogImageUrl(url) || safeImageUrl(url, ""))
+    .filter(Boolean)
+    .map((url) => ({ url, width: 1200, height: 630 }));
 
   return {
     title,
@@ -47,13 +52,13 @@ export function publicPageMetadata({
       description: desc,
       url: canonical,
       type,
-      images: imageList,
+      images: ogImages.length ? ogImages : undefined,
     },
     twitter: {
       card: "summary_large_image",
       title,
       description: desc,
-      images: imageList,
+      images: ogImages.length ? ogImages.map((img) => img.url) : undefined,
     },
   };
 }
@@ -65,12 +70,14 @@ export function organizationJsonLd() {
     name: siteInfo.name,
     url: getSiteUrl(),
     description: siteInfo.tagline,
-    telephone: siteInfo.phone,
+    telephone: siteInfo.phone.replace(/\s/g, ""),
     email: siteInfo.email,
     address: {
       "@type": "PostalAddress",
       streetAddress: siteInfo.address,
-      addressLocality: siteInfo.city,
+      addressLocality: "Thrissur",
+      addressRegion: "Kerala",
+      postalCode: siteInfo.postalCode,
       addressCountry: "IN",
     },
   };
@@ -83,12 +90,15 @@ export function localBusinessJsonLd() {
     name: siteInfo.name,
     description: siteInfo.tagline,
     url: getSiteUrl(),
-    telephone: siteInfo.phone,
+    telephone: siteInfo.phone.replace(/\s/g, ""),
     email: siteInfo.email,
+    hasMap: siteInfo.mapsUrl,
     address: {
       "@type": "PostalAddress",
       streetAddress: siteInfo.address,
-      addressLocality: siteInfo.city,
+      addressLocality: "Thrissur",
+      addressRegion: "Kerala",
+      postalCode: siteInfo.postalCode,
       addressCountry: "IN",
     },
     priceRange: "₹₹₹",

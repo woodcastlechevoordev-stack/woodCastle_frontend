@@ -16,6 +16,7 @@ export const Input = forwardRef<
       {label}
     </label>
     <input
+      {...props}
       ref={ref}
       id={id}
       className={cn(
@@ -23,7 +24,6 @@ export const Input = forwardRef<
         error && "border-red-500 focus:border-red-500 focus:ring-red-500",
         className
       )}
-      {...props}
     />
     {error && <p className="text-sm text-red-600">{error}</p>}
   </div>
@@ -39,6 +39,7 @@ export const Textarea = forwardRef<
       {label}
     </label>
     <textarea
+      {...props}
       ref={ref}
       id={id}
       className={cn(
@@ -46,7 +47,6 @@ export const Textarea = forwardRef<
         error && "border-red-500 focus:border-red-500 focus:ring-red-500",
         className
       )}
-      {...props}
     />
     {error && <p className="text-sm text-red-600">{error}</p>}
   </div>

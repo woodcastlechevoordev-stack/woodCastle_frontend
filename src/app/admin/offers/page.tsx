@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
 import type { Offer } from "@/lib/types";
 import { offerFormSchema } from "@/lib/validations";
+import { queryString, unwrapList } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
@@ -16,6 +17,8 @@ type Values = z.infer<typeof offerFormSchema>;
 
 export default function AdminOffersPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState<"all" | "active" | "inactive">("all");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Offer | null>(null);
   const [bannerImage, setBannerImage] = useState<string | null>(null);
@@ -35,14 +38,35 @@ export default function AdminOffersPage() {
   });
 
   async function load() {
-    const res = await fetch("/api/admin/offers");
+    const isActive =
+      status === "active" ? "true" : status === "inactive" ? "false" : undefined;
+    const qs = queryString({
+      search: search.trim() || undefined,
+      isActive,
+    });
+    const res = await fetch(`/api/admin/offers${qs}`);
     const data = await res.json();
-    if (Array.isArray(data)) setOffers(data);
+    const items = unwrapList<Offer>(data);
+    setOffers(
+      items.filter((o) => {
+        if (status === "active" && !o.isActive) return false;
+        if (status === "inactive" && o.isActive) return false;
+        if (search.trim()) {
+          const q = search.trim().toLowerCase();
+          if (!o.title.toLowerCase().includes(q)) return false;
+        }
+        return true;
+      })
+    );
   }
 
   useEffect(() => {
-    load();
-  }, []);
+    const t = window.setTimeout(() => {
+      load();
+    }, search ? 300 : 0);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, status]);
 
   function openCreate() {
     setEditing(null);
@@ -120,7 +144,25 @@ export default function AdminOffersPage() {
         </Button>
       </div>
 
-      <div className="mt-8 space-y-4">
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by title…"
+          className="w-full rounded-lg border border-brown-light bg-white px-3 py-2.5 text-sm text-brown-dark outline-none focus:border-gold sm:max-w-sm"
+        />
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value as "all" | "active" | "inactive")}
+          className="w-full rounded-lg border border-brown-light bg-white px-3 py-2.5 text-sm text-brown-dark outline-none focus:border-gold sm:max-w-[180px]"
+        >
+          <option value="all">All offers</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+
+      <div className="mt-6 space-y-4">
         {offers.map((o) => (
           <div
             key={o.id}
@@ -169,6 +211,11 @@ export default function AdminOffersPage() {
             </div>
           </div>
         ))}
+        {offers.length === 0 && (
+          <p className="rounded-xl border border-brown-light bg-white p-6 text-sm text-brown-mid">
+            No offers match these filters.
+          </p>
+        )}
       </div>
 
       {open && (

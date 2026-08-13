@@ -1,19 +1,51 @@
+"use client";
+
 import { DeleteAction } from "@/components/admin/DeleteAction";
 import { Button } from "@/components/ui/Button";
-import { adminBackendFetch } from "@/lib/admin-api";
 import type { BlogPost } from "@/lib/types";
+import { queryString, unwrapList } from "@/lib/utils";
 import { format } from "date-fns";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
-export const dynamic = "force-dynamic";
+type StatusFilter = "all" | "published" | "draft";
 
-export default async function AdminBlogPage() {
-  let posts: BlogPost[] = [];
-  try {
-    posts = await adminBackendFetch<BlogPost[]>("/api/admin/blog");
-  } catch {
-    posts = [];
-  }
+export default function AdminBlogPage() {
+  const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState<StatusFilter>("all");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useEffect(() => {
+    const t = window.setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => window.clearTimeout(t);
+  }, [search]);
+
+  useEffect(() => {
+    const published =
+      status === "published" ? "true" : status === "draft" ? "false" : undefined;
+    const qs = queryString({
+      search: debouncedSearch || undefined,
+      published,
+    });
+    fetch(`/api/admin/blog${qs}`)
+      .then((r) => r.json())
+      .then((data) => {
+        const items = unwrapList<BlogPost>(data);
+        setPosts(
+          items.filter((p) => {
+            if (status === "published" && !p.published) return false;
+            if (status === "draft" && p.published) return false;
+            if (debouncedSearch) {
+              const q = debouncedSearch.toLowerCase();
+              if (!p.title.toLowerCase().includes(q)) return false;
+            }
+            return true;
+          })
+        );
+      })
+      .catch(() => setPosts([]));
+  }, [debouncedSearch, status]);
 
   return (
     <div>
@@ -27,7 +59,25 @@ export default async function AdminBlogPage() {
         </Link>
       </div>
 
-      <div className="mt-8 overflow-x-auto rounded-xl border border-brown-light bg-white shadow-sm">
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by title…"
+          className="w-full rounded-lg border border-brown-light bg-white px-3 py-2.5 text-sm text-brown-dark outline-none focus:border-gold sm:max-w-sm"
+        />
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value as StatusFilter)}
+          className="w-full rounded-lg border border-brown-light bg-white px-3 py-2.5 text-sm text-brown-dark outline-none focus:border-gold sm:max-w-[180px]"
+        >
+          <option value="all">All statuses</option>
+          <option value="published">Published</option>
+          <option value="draft">Draft</option>
+        </select>
+      </div>
+
+      <div className="mt-6 overflow-x-auto rounded-xl border border-brown-light bg-white shadow-sm">
         <table className="w-full min-w-[560px] text-left text-sm">
           <thead className="border-b border-brown-light bg-cream/80 text-brown-mid">
             <tr>
@@ -58,6 +108,9 @@ export default async function AdminBlogPage() {
                     <DeleteAction
                       endpoint={`/api/admin/blog/${p.id}`}
                       itemName={p.title}
+                      onDeleted={() =>
+                        setPosts((prev) => prev.filter((item) => item.id !== p.id))
+                      }
                     />
                   </div>
                 </td>
@@ -65,6 +118,9 @@ export default async function AdminBlogPage() {
             ))}
           </tbody>
         </table>
+        {posts.length === 0 && (
+          <p className="p-6 text-sm text-brown-mid">No posts match these filters.</p>
+        )}
       </div>
     </div>
   );

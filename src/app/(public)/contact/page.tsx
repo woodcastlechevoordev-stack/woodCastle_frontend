@@ -32,7 +32,7 @@ export default function ContactPage() {
                 <p className="mt-1 text-brown-mid">
                   {siteInfo.address}
                   <br />
-                  {siteInfo.city}
+                  {siteInfo.city} {siteInfo.postalCode}
                 </p>
               </div>
             </div>
@@ -40,7 +40,7 @@ export default function ContactPage() {
               <Phone className="mt-1 shrink-0 text-gold" size={22} />
               <div>
                 <h2 className="font-heading text-xl text-brown-dark">Phone</h2>
-                <a href={`tel:${siteInfo.phone}`} className="mt-1 block text-brown-mid hover:text-gold">
+                <a href={`tel:${siteInfo.phone.replace(/\s/g, "")}`} className="mt-1 block text-brown-mid hover:text-gold">
                   {siteInfo.phone}
                 </a>
               </div>
@@ -63,6 +63,14 @@ export default function ContactPage() {
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
               />
+              <a
+                href={siteInfo.mapsUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-center bg-brown-dark px-4 py-3 text-sm font-semibold text-cream transition-colors hover:bg-gold hover:text-brown-dark"
+              >
+                Get Directions
+              </a>
             </div>
           </div>
 

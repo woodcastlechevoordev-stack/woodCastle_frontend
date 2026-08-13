@@ -2,6 +2,7 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { EnquiryForm } from "@/components/EnquiryForm";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductGallery } from "@/components/ProductGallery";
+import { ShareButton } from "@/components/ShareButton";
 import { formatPrice, getProductBySlug, getProducts } from "@/lib/api";
 import {
   breadcrumbJsonLd,
@@ -84,10 +85,15 @@ export default async function ProductPage({ params }: Props) {
             <h1 className="mt-3 font-heading text-3xl sm:text-4xl lg:text-5xl">
               {product.name}
             </h1>
-            <div className="mt-4">
+            <div className="mt-4 flex flex-wrap items-center gap-3">
               <span className="text-2xl font-semibold text-gold">
                 {formatPrice(product.price)}
               </span>
+              <ShareButton
+                title={product.name}
+                urlPath={`/product/${slug}`}
+                variant="label"
+              />
             </div>
             <p className="mt-6 text-brown-mid whitespace-pre-line">{shortDescription}</p>
 
