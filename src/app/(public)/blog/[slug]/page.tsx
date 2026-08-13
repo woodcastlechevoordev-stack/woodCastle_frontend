@@ -1,4 +1,5 @@
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { ShareButton } from "@/components/ShareButton";
 import { excerptFromHtml, getBlogPostBySlug, getBlogPosts } from "@/lib/api";
 import { articleJsonLd, JsonLd, publicPageMetadata } from "@/lib/seo";
 import { format } from "date-fns";
@@ -67,15 +68,30 @@ export default async function BlogPostPage({ params }: Props) {
           <h1 className="mt-3 font-heading text-4xl sm:text-5xl">{post.title}</h1>
           <p className="mt-4 text-lg text-brown-mid">{excerpt}</p>
         </header>
-        {post.coverImage && (
-          <div className="relative mt-8 aspect-[16/9] overflow-hidden rounded-xl">
-            <Image
-              src={post.coverImage}
-              alt={post.title}
-              fill
-              priority
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, 768px"
+        {post.coverImage ? (
+          <div className="relative mt-8">
+            <div className="relative aspect-[16/9] overflow-hidden rounded-xl">
+              <Image
+                src={post.coverImage}
+                alt={post.title}
+                fill
+                priority
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 768px"
+              />
+            </div>
+            <ShareButton
+              title={post.title}
+              urlPath={`/blog/${slug}`}
+              className="absolute right-3 top-3 z-10"
+            />
+          </div>
+        ) : (
+          <div className="mt-6">
+            <ShareButton
+              title={post.title}
+              urlPath={`/blog/${slug}`}
+              variant="label"
             />
           </div>
         )}

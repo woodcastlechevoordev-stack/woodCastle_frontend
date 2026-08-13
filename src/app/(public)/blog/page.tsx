@@ -1,3 +1,4 @@
+import { ShareButton } from "@/components/ShareButton";
 import { excerptFromHtml, getBlogPosts, siteInfo } from "@/lib/api";
 import { publicPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
@@ -44,19 +45,28 @@ export default async function BlogPage({ searchParams }: Props) {
           <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
             {shown.map((post) => (
               <article key={post.id} className="group">
+                <div className="relative">
+                  <Link href={`/blog/${post.slug}`} className="block">
+                    <div className="relative aspect-[16/10] overflow-hidden rounded-xl border border-brown-light/40">
+                      <Image
+                        src={
+                          post.coverImage ||
+                          "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80"
+                        }
+                        alt={post.title}
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      />
+                    </div>
+                  </Link>
+                  <ShareButton
+                    title={post.title}
+                    urlPath={`/blog/${post.slug}`}
+                    className="absolute right-3 top-3 z-10"
+                  />
+                </div>
                 <Link href={`/blog/${post.slug}`} className="block">
-                  <div className="relative aspect-[16/10] overflow-hidden rounded-xl border border-brown-light/40">
-                    <Image
-                      src={
-                        post.coverImage ||
-                        "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80"
-                      }
-                      alt={post.title}
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    />
-                  </div>
                   <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wider text-brown-light">
                     <span className="rounded bg-gold-light/70 px-2 py-0.5 text-brown-dark">
                       Studio
