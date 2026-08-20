@@ -1,17 +1,15 @@
 "use client";
 
 import { CloudinaryImageUpload } from "@/components/admin/CloudinaryImageUpload";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
 import { blogFormSchema } from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Placeholder from "@tiptap/extension-placeholder";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 type Values = z.infer<typeof blogFormSchema>;
 
@@ -42,30 +40,6 @@ export function BlogForm({
       ...defaultValues,
     },
   });
-
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Placeholder.configure({ placeholder: "Write your post…" }),
-    ],
-    content: defaultValues?.content || "<p></p>",
-    immediatelyRender: false,
-    onUpdate: ({ editor: ed }) => {
-      form.setValue("content", ed.getHTML(), { shouldValidate: true });
-    },
-    editorProps: {
-      attributes: {
-        class:
-          "prose-woodcastle min-h-[220px] px-4 py-3 outline-none text-brown-dark [&_h2]:font-heading [&_h2]:text-xl",
-      },
-    },
-  });
-
-  useEffect(() => {
-    if (editor && defaultValues?.content) {
-      editor.commands.setContent(defaultValues.content);
-    }
-  }, [editor, defaultValues?.content]);
 
   const metaTitle = form.watch("metaTitle");
   const metaDescription = form.watch("metaDescription");
@@ -117,35 +91,20 @@ export function BlogForm({
         }}
       />
 
-      <div>
-        <p className="mb-1.5 text-sm font-medium text-brown-dark">Content</p>
-        <div className="overflow-hidden rounded-lg border border-brown-light bg-white">
-          <div className="flex flex-wrap gap-1 border-b border-brown-light bg-cream/60 px-2 py-1.5">
-            {[
-              { label: "Bold", action: () => editor?.chain().focus().toggleBold().run() },
-              { label: "Italic", action: () => editor?.chain().focus().toggleItalic().run() },
-              {
-                label: "H2",
-                action: () => editor?.chain().focus().toggleHeading({ level: 2 }).run(),
-              },
-              {
-                label: "List",
-                action: () => editor?.chain().focus().toggleBulletList().run(),
-              },
-            ].map((btn) => (
-              <button
-                key={btn.label}
-                type="button"
-                onClick={btn.action}
-                className="rounded px-2 py-1 text-xs font-medium text-brown-mid hover:bg-brown-light/30"
-              >
-                {btn.label}
-              </button>
-            ))}
-          </div>
-          <EditorContent editor={editor} />
-        </div>
-      </div>
+      <Controller
+        name="content"
+        control={form.control}
+        render={({ field, fieldState }) => (
+          <RichTextEditor
+            id="blog-content"
+            label="Content"
+            placeholder="Write your post…"
+            value={field.value}
+            onChange={field.onChange}
+            error={fieldState.error?.message}
+          />
+        )}
+      />
 
       <div className="rounded-xl border border-brown-light bg-white p-5">
         <p className="eyebrow">SEO</p>

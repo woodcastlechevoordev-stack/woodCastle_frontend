@@ -22,6 +22,7 @@ export default async function EditProductPage({ params }: Props) {
     <div>
       <h1 className="mb-8 font-heading text-3xl text-brown-dark">Edit product</h1>
       <ProductForm
+        key={product.id}
         productId={product.id}
         defaultValues={{
           name: product.name,

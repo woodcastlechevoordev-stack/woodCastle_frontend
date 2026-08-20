@@ -68,4 +68,122 @@
     text-transform: uppercase;
     color: var(--color-gold);
   }
+
+  .prose-woodcastle {
+    color: var(--color-brown-mid);
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  .prose-woodcastle p {
+    margin: 0.85em 0;
+  }
+
+  .prose-woodcastle p:first-child {
+    margin-top: 0;
+  }
+
+  .prose-woodcastle p:last-child {
+    margin-bottom: 0;
+  }
+
+  .prose-woodcastle strong {
+    color: var(--color-brown-dark);
+    font-weight: 600;
+  }
+
+  .prose-woodcastle em {
+    font-style: italic;
+  }
+
+  .prose-woodcastle ul,
+  .prose-woodcastle ol {
+    margin: 0.85em 0;
+    padding-left: 1.35rem;
+  }
+
+  .prose-woodcastle ul {
+    list-style: disc;
+  }
+
+  .prose-woodcastle ol {
+    list-style: decimal;
+  }
+
+  .prose-woodcastle li {
+    margin: 0.25em 0;
+  }
+
+  .prose-woodcastle li p {
+    margin: 0.2em 0;
+  }
+
+  .prose-woodcastle table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.1rem 0;
+    overflow: hidden;
+    border-radius: 8px;
+    border: 1px solid var(--color-brown-light);
+  }
+
+  .prose-woodcastle th,
+  .prose-woodcastle td {
+    position: relative;
+    border: 1px solid var(--color-brown-light);
+    padding: 0.65rem 0.85rem;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .prose-woodcastle th {
+    background: var(--color-cream);
+    color: var(--color-brown-dark);
+    font-weight: 600;
+  }
+
+  .prose-woodcastle td {
+    background: var(--color-white);
+  }
+
+  .prose-woodcastle .selectedCell {
+    background: var(--color-gold-light);
+  }
+
+  .prose-woodcastle h2,
+  .prose-woodcastle h3 {
+    font-family: var(--font-heading);
+    color: var(--color-brown-dark);
+    margin: 1.4em 0 0.5em;
+  }
+
+  .prose-woodcastle h2 {
+    font-size: 1.5rem;
+  }
+
+  .prose-woodcastle h3 {
+    font-size: 1.25rem;
+  }
+
+  .ProseMirror p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    color: var(--color-brown-light);
+    pointer-events: none;
+    height: 0;
+  }
+
+  .ProseMirror-focused {
+    outline: none;
+  }
+
+  .ProseMirror .column-resize-handle {
+    position: absolute;
+    right: -2px;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--color-gold);
+    pointer-events: none;
+  }
 }

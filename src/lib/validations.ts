@@ -1,4 +1,9 @@
+import { stripHtml } from "./utils";
 import { z } from "zod";
+
+function htmlMin(min: number, message: string) {
+  return z.string().refine((html) => stripHtml(html).length >= min, message);
+}
 
 export const enquirySchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -29,7 +34,7 @@ export const totpSchema = z.object({
 export const productFormSchema = z.object({
   name: z.string().trim().min(2),
   slug: z.string().trim().min(2),
-  description: z.string().trim().min(10),
+  description: htmlMin(10, "Description must be at least 10 characters"),
   price: z.coerce.number().positive(),
   compareAtPrice: z.coerce.number().positive().optional().or(z.literal("")),
   categoryId: z.string().min(1),
@@ -63,7 +68,7 @@ export const blogFormSchema = z.object({
   title: z.string().min(2),
   slug: z.string().min(2),
   excerpt: z.string().min(10),
-  content: z.string().min(20),
+  content: htmlMin(20, "Content must be at least 20 characters"),
   coverImage: z.string().optional(),
   metaTitle: z.string().min(2),
   metaDescription: z.string().min(10),
