@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { formatPrice } from "@/lib/api";
 import { subcategoryGroups } from "@/lib/categories";
 import type { Category, Product } from "@/lib/types";
-import { queryString, unwrapList } from "@/lib/utils";
+import { queryString, stripHtml, unwrapList } from "@/lib/utils";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
@@ -46,7 +46,7 @@ export default function AdminProductsPage() {
             }
             if (debouncedSearch) {
               const q = debouncedSearch.toLowerCase();
-              const hay = `${p.name} ${p.description || ""}`.toLowerCase();
+              const hay = `${p.name} ${stripHtml(p.description || "")}`.toLowerCase();
               if (!hay.includes(q)) return false;
             }
             return true;

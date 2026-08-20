@@ -2,8 +2,9 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { EnquiryForm } from "@/components/EnquiryForm";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductGallery } from "@/components/ProductGallery";
+import { RichContent } from "@/components/RichContent";
 import { ShareButton } from "@/components/ShareButton";
-import { formatPrice, getProductBySlug, getProducts } from "@/lib/api";
+import { excerptFromHtml, formatPrice, getProductBySlug, getProducts } from "@/lib/api";
 import {
   breadcrumbJsonLd,
   JsonLd,
@@ -47,10 +48,7 @@ export default async function ProductPage({ params }: Props) {
         .slice(0, 4)
     : [];
 
-  const shortDescription =
-    product.description.length > 220
-      ? `${product.description.slice(0, 220).trim()}…`
-      : product.description;
+  const shortDescription = excerptFromHtml(product.description, 220);
 
   return (
     <>
@@ -95,7 +93,7 @@ export default async function ProductPage({ params }: Props) {
                 variant="label"
               />
             </div>
-            <p className="mt-6 text-brown-mid whitespace-pre-line">{shortDescription}</p>
+            <p className="mt-6 text-brown-mid">{shortDescription}</p>
 
             <div className="mt-8 scroll-mt-28" id="enquire">
               <EnquiryForm productId={product.id} productName={product.name} />
@@ -106,9 +104,10 @@ export default async function ProductPage({ params }: Props) {
         <section className="mt-14 border-t border-brown-light/40 pt-12">
           <p className="eyebrow">Details</p>
           <h2 className="mt-3 font-heading text-2xl sm:text-3xl">Full description</h2>
-          <p className="mt-5 max-w-3xl text-brown-mid whitespace-pre-line">
-            {product.description}
-          </p>
+          <RichContent
+            html={product.description}
+            className="mt-5 max-w-3xl text-brown-mid"
+          />
         </section>
 
         {related.length > 0 && (

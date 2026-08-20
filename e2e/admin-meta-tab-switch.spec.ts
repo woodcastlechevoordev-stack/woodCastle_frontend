@@ -181,7 +181,9 @@ test.describe("ADM-15 — copy meta from another tab, then save", () => {
 
     await page.locator("#name").fill(name);
     await page.locator("#name").blur();
-    await page.locator("#description").fill("Solid teak test piece for meta copy-paste flow.");
+    const descriptionEditor = page.locator("#description .ProseMirror");
+    await expect(descriptionEditor).toBeVisible();
+    await descriptionEditor.fill("Solid teak test piece for meta copy-paste flow.");
     await page.locator("#price").fill("15000");
 
     const categorySelect = page.locator("#categoryId");

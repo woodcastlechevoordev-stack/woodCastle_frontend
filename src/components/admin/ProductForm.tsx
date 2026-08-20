@@ -1,6 +1,7 @@
 "use client";
 
 import { CloudinaryImageUpload } from "@/components/admin/CloudinaryImageUpload";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
 import { getLeafCategories, subcategoryGroups } from "@/lib/categories";
@@ -16,7 +17,7 @@ import { productFormSchema } from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
 type Values = z.infer<typeof productFormSchema>;
@@ -39,6 +40,7 @@ export function ProductForm({
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const restoredDraft = useRef(false);
+  const skipDraftWrite = useRef(false);
   const initialImages = defaultValues?.images ?? [];
   const [images, setImages] = useState<string[]>(initialImages);
   const [message, setMessage] = useState("");
@@ -85,12 +87,21 @@ export function ProductForm({
     if (!restoredDraft.current) {
       restoredDraft.current = true;
       const draft = readFormDraft<ProductDraft>(PRODUCT_DRAFT_KEY);
+      // New-product drafts share productId: undefined, so a previous create
+      // (or an unsaved visit) was being restored every time Add product opened.
+      if (!productId) {
+        if (draft && draft.productId == null) {
+          clearFormDraft(PRODUCT_DRAFT_KEY);
+        }
+        return;
+      }
       if (draft && draft.productId === productId) {
         form.reset(draft.values);
         setImages(draft.images);
       }
       return;
     }
+    if (skipDraftWrite.current || !productId) return;
     writeFormDraft(PRODUCT_DRAFT_KEY, {
       productId,
       values,
@@ -144,8 +155,9 @@ export function ProductForm({
       setMessage(data.error || "Failed to save product");
       return;
     }
-    setMessage("Product saved");
+    skipDraftWrite.current = true;
     clearFormDraft(PRODUCT_DRAFT_KEY);
+    setMessage("Product saved");
     router.push("/admin/products");
   }
 
@@ -170,11 +182,19 @@ export function ProductForm({
           {...form.register("slug")}
         />
       </div>
-      <Textarea
-        id="description"
-        label="Description"
-        error={form.formState.errors.description?.message}
-        {...form.register("description")}
+      <Controller
+        name="description"
+        control={form.control}
+        render={({ field, fieldState }) => (
+          <RichTextEditor
+            id="description"
+            label="Description"
+            placeholder="Describe this piece — materials, dimensions, finish…"
+            value={field.value}
+            onChange={field.onChange}
+            error={fieldState.error?.message}
+          />
+        )}
       />
       <div className="grid gap-4 sm:grid-cols-2">
         <Input

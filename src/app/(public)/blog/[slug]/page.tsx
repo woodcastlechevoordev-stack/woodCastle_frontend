@@ -1,4 +1,5 @@
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { RichContent } from "@/components/RichContent";
 import { ShareButton } from "@/components/ShareButton";
 import { excerptFromHtml, getBlogPostBySlug, getBlogPosts } from "@/lib/api";
 import { articleJsonLd, JsonLd, publicPageMetadata } from "@/lib/seo";
@@ -95,10 +96,7 @@ export default async function BlogPostPage({ params }: Props) {
             />
           </div>
         )}
-        <div
-          className="prose-woodcastle mt-10 space-y-4 [&_h2]:mt-10 [&_h2]:font-heading [&_h2]:text-2xl [&_h2]:text-brown-dark [&_p]:text-brown-mid"
-          dangerouslySetInnerHTML={{ __html: post.content }}
-        />
+        <RichContent html={post.content} className="mt-10" />
       </article>
     </>
   );

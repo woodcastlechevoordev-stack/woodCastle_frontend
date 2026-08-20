@@ -1,4 +1,4 @@
-import { getSiteUrl, siteInfo } from "./api";
+import { excerptFromHtml, getSiteUrl, siteInfo } from "./api";
 import { ogImageUrl, safeImageUrl } from "./images";
 import type { Product } from "./types";
 import type { Metadata } from "next";
@@ -112,7 +112,7 @@ export function productJsonLd(product: Product) {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
-    description: product.description,
+    description: excerptFromHtml(product.description, 300),
     image: product.images || [],
     url: `${getSiteUrl()}/product/${product.slug}`,
     offers: {

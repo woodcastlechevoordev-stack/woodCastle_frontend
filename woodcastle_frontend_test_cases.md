@@ -97,13 +97,14 @@ How to use this: work through each row in your browser (desktop and mobile where
 | ADM-15 | Copy meta from a new tab, then save a subcategory | `/admin/categories` → Add category → fill name/parent → open a new tab, copy page title + meta description → paste into Meta title / Meta description → Save | Modal closes, subcategory appears under the chosen parent, sidebar and Add category still work (no frozen overlay / silent save failure) | Headed Chromium (`e2e/admin-meta-tab-switch.spec.ts`): after the tab switch, parent was previously dropped and the item saved as a new main category. Fix keeps parent from the DOM on save/tab-focus. Subcategory now lands under Kids Furniture; modal closes; Add category still opens. Cleaned up after. | Pass |
 | ADM-16 | Copy meta from a new tab, then save a product | `/admin/products/new` → fill details through images → open a new tab, copy title + meta description → paste SEO fields → Save | Lands on the products list with the new row; navigation still works; no stuck overlay | Headed Chromium: product saved after copying homepage title/description in a second tab; list stayed interactive; deleted afterward. | Pass |
 | ADM-17 | Save with incomplete meta shows errors | Open Add category, fill name/slug, leave meta blank, click Save | Inline errors on meta title/description; modal stays open; Save does not appear to “do nothing” | Validation messages wired on category + product SEO fields (`trim` + min length). Covered by the form error banner on invalid submit. | Pass |
+| ADM-18 | Product description uses the shared Tiptap editor | `/admin/products/new` (and blog new/edit) | Same editor as blog: bold, italic, brown/gold colour swatches, bullet/numbered lists, insert/edit table. Product description is no longer a plain textarea | Shared `RichTextEditor` is used on product description and blog content. Public product/blog pages render the stored HTML with on-brand table/list styles. | Pass |
 
 ---
 
 ## Summary (fill in after testing)
 
-- Total tests run: `47`
-- Passed: `38`
+- Total tests run: `48`
+- Passed: `39`
 - Failed: `4` (HOME-06, BLOG-01, SEO-01, SEO-02)
 - Blocked: `5` (PDP-02, CATP-01, CATP-02, BLOG-02, ADM-02)
 - Critical failures (block launch): `None in the frontend code itself.` Launch is still weak on **content**: only 1 live product (`divan` under Dining Chair), **0 blog posts**, and no product with a second image. Fix before launch: title template duplicating `\| Woodcastle`, and sitemap omitting subcategory URLs.
