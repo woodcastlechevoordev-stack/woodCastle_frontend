@@ -32,6 +32,8 @@ How to use this: work through each row in your browser (desktop and mobile where
 | HOME-05 | Trust/stat row shows correct brand facts | Scroll to the stat row | Shows 44 Years, 100% Teak Wood, 10 Lakh+ Happy Customers, Chevoor/Thrissur legacy line | Present: 44 Years of Legacy, 100% Teak Wood, 10 Lakh+ Happy Customers, Chevoor / Since 1982. | Pass |
 | HOME-06 | Blog preview shows latest posts | Scroll to blog section | Shows the 3 most recently published posts | `/api/blog` returns 0 posts. "From the journal" section is omitted when empty. | Fail |
 | HOME-07 | Footer legacy line and links all work | Scroll to footer | Legacy line present, all footer links navigate correctly, no dead links | Footer has "44 Years of Trusted Craftsmanship — Chevoor, Thrissur, Kerala". `/about`, `/contact`, `/blog`, `/offers`, `/terms-and-conditions` all 200. | Pass |
+| HOME-08 | Testimonials pull active site-wide reviews | Scroll to testimonials | Quote cards show customer name, star rating, review text (and photo if uploaded). Only Active, non-product reviews from `GET /api/reviews`. Inactive reviews stay hidden. | — | |
+| HOME-09 | Google reviews widget is separate | Scroll to testimonials | "As Seen on Google" card shows overall rating, review count, up to 5 Google reviews, Google logo/attribution, and a link to the Maps listing. Not mixed into the admin review cards. | — | |
 
 ---
 
@@ -46,6 +48,7 @@ How to use this: work through each row in your browser (desktop and mobile where
 | PDP-05 | Submit an enquiry — mobile | Repeat PDP-03 on a phone | WhatsApp app opens directly (not a browser tab) with the same pre-filled message | Same `wa.me` URL (opens the app on phones). Desktop and mobile share `window.open`. Not executed on a physical device. | Pass |
 | PDP-06 | Enquiry still saves if WhatsApp tab is blocked/closed | Submit an enquiry, immediately close the WhatsApp tab without sending | Check the admin panel — enquiry should still appear in the inbox | Enquiry is persisted in the POST response (`status: "new"`) before WhatsApp opens. Inbox showed "QA Frontend Test" as new. | Pass |
 | PDP-07 | Sticky "Enquire Now" button on mobile | On a phone, scroll down a product page | An enquiry CTA stays accessible without needing to scroll back up | Fixed bottom bar `fixed inset-x-0 bottom-0 ... lg:hidden` with Enquire Now → `#enquire` is in the product HTML. | Pass |
+| PDP-08 | Product reviews section | Open a product that has reviews, then one that has none | Reviews (name, stars, text, photo if present) appear below the description when `GET /api/reviews?productId=` returns items. Section is omitted entirely when there are none — no empty state. | — | |
 
 ---
 
@@ -98,12 +101,16 @@ How to use this: work through each row in your browser (desktop and mobile where
 | ADM-16 | Copy meta from a new tab, then save a product | `/admin/products/new` → fill details through images → open a new tab, copy title + meta description → paste SEO fields → Save | Lands on the products list with the new row; navigation still works; no stuck overlay | Headed Chromium: product saved after copying homepage title/description in a second tab; list stayed interactive; deleted afterward. | Pass |
 | ADM-17 | Save with incomplete meta shows errors | Open Add category, fill name/slug, leave meta blank, click Save | Inline errors on meta title/description; modal stays open; Save does not appear to “do nothing” | Validation messages wired on category + product SEO fields (`trim` + min length). Covered by the form error banner on invalid submit. | Pass |
 | ADM-18 | Product description uses the shared Tiptap editor | `/admin/products/new` (and blog new/edit) | Same editor as blog: bold, italic, brown/gold colour swatches, bullet/numbered lists, insert/edit table. Product description is no longer a plain textarea | Shared `RichTextEditor` is used on product description and blog content. Public product/blog pages render the stored HTML with on-brand table/list styles. | Pass |
+| ADM-19 | Site pages editor | `/admin/pages` → Edit About / Terms / Contact → save | Form is title + Tiptap content. Save calls `PATCH /api/admin/pages/:key`. Public `/about`, `/terms-and-conditions`, `/contact` show the updated content. | — | |
+| ADM-20 | Create, toggle, and delete a review | `/admin/reviews/new` → fill name, 1–5 stars, text, optional photo/product → save. Toggle Active on the list. Delete with confirmation. | New review appears. Active toggle updates public visibility (homepage if site-wide, product page if tied to a product). Delete confirmation required; review is removed after confirm. | — | |
+| ADM-21 | Review list search and product filter | `/admin/reviews` — search by name/text, filter by product | Search matches customer name/text. Product dropdown filters to that product (or site-wide only). | — | |
+| ADM-22 | Duplicate product name detection | `/admin/products/new` — type a name that already exists in the selected subcategory (wait ~300ms). Repeat on edit after changing name or category. | Dialog: *A product named '[name]' already exists in [subcategory]. Suggested name: '[suggestedName]'.* **Confirm** fills name + slug with the suggestion. **Keep My Name** closes the dialog, leaves the typed name, and shows an inline uniqueness note. No dialog on edit until name or category actually changes. | — | |
 
 ---
 
 ## Summary (fill in after testing)
 
-- Total tests run: `48`
+- Total tests run: `48` (plus 7 new cases HOME-08, HOME-09, PDP-08, ADM-19, ADM-20, ADM-21, ADM-22 added for reviews / Google widget / pages editor / duplicate-name detection — not yet executed)
 - Passed: `39`
 - Failed: `4` (HOME-06, BLOG-01, SEO-01, SEO-02)
 - Blocked: `5` (PDP-02, CATP-01, CATP-02, BLOG-02, ADM-02)

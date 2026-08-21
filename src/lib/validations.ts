@@ -74,6 +74,20 @@ export const blogFormSchema = z.object({
   metaDescription: z.string().min(10),
 });
 
+export const reviewFormSchema = z.object({
+  customerName: z.string().trim().min(2, "Name must be at least 2 characters"),
+  rating: z.coerce.number().int().min(1).max(5),
+  reviewText: z.string().trim().min(10, "Review must be at least 10 characters"),
+  customerPhoto: z.string().optional(),
+  productId: z.string().optional().or(z.literal("")),
+  isActive: z.boolean(),
+});
+
+export const staticPageFormSchema = z.object({
+  title: z.string().trim().min(2, "Title is required"),
+  content: htmlMin(20, "Content must be at least 20 characters"),
+});
+
 export const passwordChangeSchema = z
   .object({
     currentPassword: z.string().min(1),

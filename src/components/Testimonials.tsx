@@ -1,46 +1,40 @@
-const testimonials = [
-  {
-    quote:
-      "Our teak dining table arrived beautifully finished — the grain is stunning and the joinery feels rock solid. True Chevoor craftsmanship.",
-    name: "Ananya Krishnan",
-    place: "Thrissur",
-  },
-  {
-    quote:
-      "From enquiry to delivery, the team was patient and clear. After 44 years in the trade, it shows — the wardrobe fit our room perfectly.",
-    name: "Rahul Menon",
-    place: "Kochi",
-  },
-  {
-    quote:
-      "Finally furniture that feels like it will last. 100% teak, warm finish, honest wood — exactly what we wanted from Kerala's best.",
-    name: "Meera Joseph",
-    place: "Chevoor",
-  },
-] as const;
+import { GoogleReviews } from "@/components/GoogleReviews";
+import { ReviewCard } from "@/components/ReviewCard";
+import type { GoogleReviewsPayload, Review } from "@/lib/types";
 
-export function Testimonials() {
+export function Testimonials({
+  reviews,
+  googleReviews,
+}: {
+  reviews: Review[];
+  googleReviews: GoogleReviewsPayload | null;
+}) {
+  const hasReviews = reviews.length > 0;
+  const hasGoogle = Boolean(googleReviews && (googleReviews.totalReviews > 0 || googleReviews.reviews.length > 0));
+
+  if (!hasReviews && !hasGoogle) return null;
+
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
       <div className="mb-10 text-center">
         <p className="eyebrow">Testimonials</p>
-        <h2 className="mt-3 font-heading text-3xl sm:text-4xl">Homes furnished with care</h2>
+        <h2 className="mt-3 font-heading text-3xl sm:text-4xl">Homes Furnished With Care</h2>
         <div className="section-divider mx-auto mt-6 max-w-xs" />
       </div>
-      <div className="grid gap-6 md:grid-cols-3">
-        {testimonials.map((t) => (
-          <blockquote
-            key={t.name}
-            className="rounded-xl border border-brown-light/50 bg-white p-6 shadow-sm"
-          >
-            <p className="text-brown-mid">&ldquo;{t.quote}&rdquo;</p>
-            <footer className="mt-5">
-              <cite className="not-italic font-semibold text-brown-dark">{t.name}</cite>
-              <p className="text-xs text-brown-light">{t.place}</p>
-            </footer>
-          </blockquote>
-        ))}
-      </div>
+
+      {hasReviews && (
+        <div className="grid gap-6 md:grid-cols-3">
+          {reviews.map((review) => (
+            <ReviewCard key={review.id} review={review} />
+          ))}
+        </div>
+      )}
+
+      {hasGoogle && googleReviews && (
+        <div className={hasReviews ? "mt-10" : undefined}>
+          <GoogleReviews data={googleReviews} />
+        </div>
+      )}
     </section>
   );
 }

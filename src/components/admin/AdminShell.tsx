@@ -9,8 +9,10 @@ import {
   LogOut,
   Menu,
   MessageSquare,
+  NotebookPen,
   Package,
   Settings,
+  Star,
   Tag,
   X,
 } from "lucide-react";
@@ -26,6 +28,8 @@ const links = [
   { href: "/admin/blog", label: "Blog", icon: FileText },
   { href: "/admin/offers", label: "Offers", icon: Tag },
   { href: "/admin/enquiries", label: "Enquiries", icon: MessageSquare },
+  { href: "/admin/reviews", label: "Reviews", icon: Star },
+  { href: "/admin/pages", label: "Pages", icon: NotebookPen },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 

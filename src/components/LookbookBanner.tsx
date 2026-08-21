@@ -28,7 +28,7 @@ export function LookbookBanner({ products }: { products: Product[] }) {
         <div className="relative mx-auto flex min-h-[70vh] max-w-7xl flex-col justify-end px-4 py-12 sm:px-6 lg:min-h-[75vh] lg:px-8 lg:py-16">
           <p className="eyebrow text-gold-light">Lookbook</p>
           <h2 className="mt-3 max-w-xl font-heading text-3xl text-cream sm:text-4xl">
-            Lived-in spaces, lasting timber
+            Lived-In Spaces, Lasting Timber
           </h2>
           <p className="mt-3 max-w-md text-cream/80">
             Explore pieces styled for everyday living — tap a callout to view details.

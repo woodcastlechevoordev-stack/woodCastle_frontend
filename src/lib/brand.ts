@@ -8,15 +8,17 @@ export const brand = {
   tagline: "Kerala's Best Furniture",
   locationShort: "Chevoor, Thrissur",
   locationFull: "Chevoor, Thrissur, Kerala",
-  legacyLine: "44 Years of Trusted Craftsmanship — Chevoor, Thrissur, Kerala",
+  legacyLine: "44 Years Of Trusted Craftsmanship — Chevoor, Thrissur, Kerala",
   originStory:
     "One of the first furniture shops in Thrissur's Chevoor, crafting solid teak pieces for Kerala homes for over four decades.",
+  instagramUrl: "https://www.instagram.com/wood_castle_furniture/",
+  facebookUrl: "https://www.facebook.com/615942364942377",
 } as const;
 
 export const brandStats = [
   {
     value: "44",
-    label: "Years of Legacy",
+    label: "Years Of Legacy",
     detail: "Trusted craftsmanship since 1982",
   },
   {

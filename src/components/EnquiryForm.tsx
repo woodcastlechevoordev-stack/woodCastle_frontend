@@ -64,7 +64,7 @@ export function EnquiryForm({
       <div className="rounded-xl border border-brown-light bg-white p-6 text-center shadow-sm">
         <CheckCircle2 className="mx-auto text-gold" size={40} />
         <h3 className="mt-3 font-heading text-xl text-brown-dark">
-          Enquiry received!
+          Enquiry Received!
         </h3>
         <p className="mt-2 text-sm text-brown-mid">
           {whatsappOpened

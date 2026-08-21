@@ -22,7 +22,7 @@ export default async function OffersPage() {
     <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
       <header className="max-w-2xl">
         <p className="eyebrow">Promotions</p>
-        <h1 className="mt-3 font-heading text-4xl sm:text-5xl">Current offers</h1>
+        <h1 className="mt-3 font-heading text-4xl sm:text-5xl">Current Offers</h1>
         <p className="mt-4 text-brown-mid">
           Limited-time promotions on selected collections. Enquire to claim — our team
           will confirm eligibility on WhatsApp.

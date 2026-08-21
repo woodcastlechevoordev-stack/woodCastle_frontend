@@ -43,6 +43,19 @@ export function stripHtml(html: string): string {
     .trim();
 }
 
+/** Use CMS HTML when it has real copy; otherwise the hardcoded fallback. */
+export function resolveStaticPageHtml(
+  content: string | null | undefined,
+  fallback: string
+): string {
+  const raw = content?.trim() ?? "";
+  if (!raw) return fallback;
+  const text = stripHtml(raw);
+  if (text.length < 120) return fallback;
+  if (/update these terms|will be published here/i.test(text)) return fallback;
+  return /<\/?[a-z][\s\S]*>/i.test(raw) ? raw : `<p>${raw}</p>`;
+}
+
 export function slugify(value: string): string {
   return value
     .toLowerCase()
