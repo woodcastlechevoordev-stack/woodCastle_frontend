@@ -21,7 +21,7 @@ export function SignatureCollections({ categories }: { categories: Category[] })
         <div className="mb-10 max-w-2xl">
           <p className="eyebrow">Signature Collections</p>
           <h2 className="mt-3 font-heading text-3xl sm:text-4xl">
-            Discover our interior collections
+            Discover Our Interior Collections
           </h2>
           <div className="section-divider mt-6 max-w-xs" />
         </div>

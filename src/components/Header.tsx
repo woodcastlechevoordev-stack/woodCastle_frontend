@@ -237,7 +237,7 @@ export function Header({ categories }: HeaderProps) {
                                   href={`/category/${activeMain.slug}`}
                                   className="inline-flex text-sm font-semibold text-gold hover:underline"
                                 >
-                                  View all in {activeMain.name}
+                                  View All In {activeMain.name}
                                 </Link>
                               )}
                             </>

@@ -12,7 +12,9 @@ import {
   getActiveOffers,
   getBlogPosts,
   getCategories,
+  getGoogleReviews,
   getProducts,
+  getReviews,
   siteInfo,
 } from "@/lib/api";
 import { brand } from "@/lib/brand";
@@ -33,12 +35,15 @@ export const metadata: Metadata = {
 const FALLBACK_HERO = FALLBACK_IMAGE;
 
 export default async function HomePage() {
-  const [categories, products, offers, posts] = await Promise.all([
-    getCategories(),
-    getProducts(),
-    getActiveOffers(),
-    getBlogPosts(),
-  ]);
+  const [categories, products, offers, posts, reviews, googleReviews] =
+    await Promise.all([
+      getCategories(),
+      getProducts(),
+      getActiveOffers(),
+      getBlogPosts(),
+      getReviews(),
+      getGoogleReviews(),
+    ]);
 
   const topCategories = getTopLevelCategories(categories);
   const activeProducts = products.filter((p) => p.isActive !== false);
@@ -50,7 +55,7 @@ export default async function HomePage() {
     {
       image: FALLBACK_HERO,
       eyebrow: siteInfo.name,
-      headline: `${brand.yearsOfLegacy} Years of Legacy · ${brand.tagline}`,
+      headline: `${brand.yearsOfLegacy} Years Of Legacy · ${brand.tagline}`,
       description: `${brand.material} furniture from ${brand.locationShort} — one of the first furniture shops in the area, trusted by ${brand.customersLabel.toLowerCase()} happy customers.`,
       ctaLabel: "Browse Collections",
       ctaHref: topCategories[0] ? `/category/${topCategories[0].slug}` : "/about",
@@ -115,7 +120,7 @@ export default async function HomePage() {
       <section id="collections" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
         <div className="mb-10 text-center">
           <p className="eyebrow">Browse Categories</p>
-          <h2 className="mt-3 font-heading text-3xl sm:text-4xl">Our collections</h2>
+          <h2 className="mt-3 font-heading text-3xl sm:text-4xl">Our Collections</h2>
           <div className="section-divider mx-auto mt-6 max-w-xs" />
         </div>
         {topCategories.length === 0 ? (
@@ -135,7 +140,7 @@ export default async function HomePage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-10 text-center">
             <p className="eyebrow">Featured Furniture</p>
-            <h2 className="mt-3 font-heading text-3xl sm:text-4xl">Our picks for you</h2>
+            <h2 className="mt-3 font-heading text-3xl sm:text-4xl">Our Picks For You</h2>
             <div className="section-divider mx-auto mt-6 max-w-xs" />
           </div>
           {featured.length === 0 ? (
@@ -160,13 +165,13 @@ export default async function HomePage() {
             <div className="mb-8 flex items-end justify-between gap-4">
               <div>
                 <p className="eyebrow">Offers</p>
-                <h2 className="mt-2 font-heading text-3xl">Seasonal highlights</h2>
+                <h2 className="mt-2 font-heading text-3xl">Seasonal Highlights</h2>
               </div>
               <Link
                 href="/offers"
                 className="hidden text-sm font-semibold text-gold hover:underline sm:block"
               >
-                View all offers
+                View All Offers
               </Link>
             </div>
             <div className="flex gap-4 overflow-x-auto pb-2 snap-x">
@@ -205,7 +210,7 @@ export default async function HomePage() {
 
       <SignatureCollections categories={topCategories} />
 
-      <Testimonials />
+      <Testimonials reviews={reviews} googleReviews={googleReviews} />
 
       {posts.length > 0 && (
         <section className="bg-white py-16 lg:py-20">
@@ -213,13 +218,13 @@ export default async function HomePage() {
             <div className="mb-10 flex items-end justify-between gap-4">
               <div>
                 <p className="eyebrow">News Insight</p>
-                <h2 className="mt-3 font-heading text-3xl">From the journal</h2>
+                <h2 className="mt-3 font-heading text-3xl">From The Journal</h2>
               </div>
               <Link
                 href="/blog"
                 className="hidden text-sm font-semibold text-gold hover:underline sm:block"
               >
-                View all posts
+                View All Posts
               </Link>
             </div>
             <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">

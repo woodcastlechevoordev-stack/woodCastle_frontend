@@ -81,7 +81,7 @@ export default async function CategoryPage({ params }: Props) {
 
         {isMainWithSubs && (
           <section className="mt-10">
-            <p className="eyebrow">Shop by type</p>
+            <p className="eyebrow">Shop By Type</p>
             <h2 className="mt-2 font-heading text-2xl text-brown-dark">
               Subcategories
             </h2>

@@ -39,6 +39,7 @@ NEXT_PUBLIC_API_URL=http://localhost:5001
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
 # .env.production
+NEXT_PUBLIC_SITE_URL=https://www.woodcastlefurniture.com
 NEXT_PUBLIC_API_URL=https://woodcastle-backend.onrender.com
 
 # Cloudinary (admin image uploads — products, categories, blog covers, offer banners)

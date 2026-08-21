@@ -21,7 +21,7 @@ export async function Footer() {
             <p className="mt-3 text-sm text-cream/60">{brand.originStory}</p>
             <div className="mt-5 flex gap-3">
               <a
-                href="https://instagram.com"
+                href={brand.instagramUrl}
                 target="_blank"
                 rel="noreferrer"
                 aria-label="Instagram"
@@ -30,7 +30,7 @@ export async function Footer() {
                 <Instagram size={18} />
               </a>
               <a
-                href="https://facebook.com"
+                href={brand.facebookUrl}
                 target="_blank"
                 rel="noreferrer"
                 aria-label="Facebook"
@@ -126,7 +126,18 @@ export async function Footer() {
         <div className="section-divider mt-12 opacity-40" />
         <p className="mt-6 text-center text-sm text-cream/70">{brand.legacyLine}</p>
         <p className="mt-3 text-center text-xs text-cream/50">
-          © {new Date().getFullYear()} {siteInfo.name}. All rights reserved.
+          © {new Date().getFullYear()} {siteInfo.name}. All Rights Reserved.
+        </p>
+        <p className="mt-2 text-center text-xs text-cream/45">
+          Website Developed By{" "}
+          <a
+            href="https://foxelyx.com"
+            target="_blank"
+            rel="noreferrer"
+            className="text-gold/80 transition-colors hover:text-gold hover:underline"
+          >
+            Foxelyx.com
+          </a>
         </p>
       </div>
     </footer>

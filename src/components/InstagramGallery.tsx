@@ -20,7 +20,7 @@ export function InstagramGallery({ products }: { products: Product[] }) {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-8 text-center">
           <p className="eyebrow">Gallery</p>
-          <h2 className="mt-3 font-heading text-3xl">Pieces from the workshop</h2>
+          <h2 className="mt-3 font-heading text-3xl">Pieces From The Workshop</h2>
         </div>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">

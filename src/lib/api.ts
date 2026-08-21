@@ -2,12 +2,14 @@ import { brand } from "./brand";
 import { backendFetch } from "./backend";
 import { findCategoryBySlug, nestCategories } from "./categories";
 import { safeImageUrls } from "./images";
-import { stripHtml } from "./utils";
+import { queryString, stripHtml } from "./utils";
 import type {
   BlogPost,
   Category,
+  GoogleReviewsPayload,
   Offer,
   Product,
+  Review,
   SiteInfo,
   StaticPage,
 } from "./types";
@@ -29,8 +31,11 @@ export const siteInfo: SiteInfo = {
     "https://maps.google.com/maps?q=Wood+Castle,+Chevoor,+Thrissur,+Kerala+680027&hl=en&z=16&output=embed",
 };
 
+const PRODUCTION_SITE_URL = "https://www.woodcastlefurniture.com";
+
 export function getSiteUrl(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const raw = process.env.NEXT_PUBLIC_SITE_URL || PRODUCTION_SITE_URL;
+  return raw.replace(/\/+$/, "");
 }
 
 export function formatPrice(amount: number | string | null | undefined): string {
@@ -190,6 +195,46 @@ export async function getActiveOffers(): Promise<Offer[]> {
 export async function getStaticPage(key: string): Promise<StaticPage | null> {
   try {
     return await backendFetch<StaticPage>(`/api/pages/${key}`, revalidateOpt);
+  } catch {
+    return null;
+  }
+}
+
+/** Active reviews. Omit productId for site-wide testimonials (spec §3.2.7). */
+export async function getReviews(productId?: string): Promise<Review[]> {
+  try {
+    const qs = queryString({ productId });
+    return unwrapItems(
+      await backendFetch<Review[] | { items: Review[] }>(
+        `/api/reviews${qs}`,
+        revalidateOpt
+      )
+    ).filter((review) => {
+      if (review.isActive === false) return false;
+      if (productId) return review.productId === productId;
+      return !review.productId;
+    });
+  } catch {
+    return [];
+  }
+}
+
+/** Google Places reviews via backend proxy (spec §3.2.7 / backend §5d). */
+export async function getGoogleReviews(): Promise<GoogleReviewsPayload | null> {
+  try {
+    const data = await backendFetch<
+      GoogleReviewsPayload & { userRatingCount?: number }
+    >("/api/google-reviews", {
+      next: { revalidate: 86400 },
+    });
+    const rating = Number(data?.rating);
+    if (!data || Number.isNaN(rating)) return null;
+    const reviews = Array.isArray(data.reviews) ? data.reviews.slice(0, 5) : [];
+    return {
+      rating,
+      totalReviews: data.totalReviews ?? data.userRatingCount ?? reviews.length,
+      reviews,
+    };
   } catch {
     return null;
   }

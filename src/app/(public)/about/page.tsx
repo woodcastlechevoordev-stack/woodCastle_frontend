@@ -1,6 +1,7 @@
 import { getStaticPage, siteInfo } from "@/lib/api";
 import { brand } from "@/lib/brand";
 import { publicPageMetadata } from "@/lib/seo";
+import { resolveStaticPageHtml } from "@/lib/utils";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -11,9 +12,13 @@ export const revalidate = 60;
 const DEFAULT_ABOUT_HTML = `
 <p>${siteInfo.name} began in ${brand.locationShort} as one of the first furniture shops in the area — a workshop built on teak, joinery, and trust.</p>
 <p>For ${brand.yearsOfLegacy} years we have furnished Kerala homes with solid wood pieces meant to last generations. That legacy is why families return to us, and why more than ${brand.customersLabel.toLowerCase()} customers place their confidence in our craft.</p>
-<h2>100% teak wood</h2>
+<h2>Our Story</h2>
+<p>Since ${brand.establishedYear}, ${siteInfo.name} has grown from a neighbourhood workshop into a trusted furniture house for Kerala families. We still design, select timber, and finish pieces with the same care that started this business — honest materials, skilled hands, and furniture you can live with for decades.</p>
+<h2>100% Teak Wood</h2>
 <p>Every piece we build starts with ${brand.material.toLowerCase()}. Teak’s natural oils, strength, and warm grain make it the right timber for furniture that ages with dignity — not a veneer story, but the real wood through and through.</p>
-<h2>Chevoor, Thrissur</h2>
+<h2>Craftsmanship</h2>
+<p>Our carpenters and finishers work with traditional joinery and modern precision. From sofas and beds to dining sets and storage, each piece is made to sit well in a Kerala home: climate-aware, proportioned, and built to be used every day.</p>
+<h2>Visit Us In Chevoor, Thrissur</h2>
 <p>${brand.originStory} Visit our showroom to see finishes, grains, and proportions in person — then enquire for pieces crafted to order for your home.</p>
 `;
 
@@ -46,7 +51,7 @@ export default async function AboutPage() {
           <div>
             <p className="eyebrow text-gold-light">About Us</p>
             <h1 className="mt-3 font-heading text-4xl text-cream sm:text-5xl">
-              {page?.title || `${brand.yearsOfLegacy} years of teak craft`}
+              {page?.title || `${brand.yearsOfLegacy} Years Of Teak Craft`}
             </h1>
             <p className="mt-3 max-w-xl text-cream/85">
               {brand.tagline} · From {brand.locationFull}
@@ -57,13 +62,9 @@ export default async function AboutPage() {
 
       <article className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
         <div
-          className="space-y-4 text-lg text-brown-mid [&_h2]:mt-10 [&_h2]:font-heading [&_h2]:text-2xl [&_h2]:text-brown-dark"
+          className="prose-woodcastle space-y-4 text-lg text-brown-mid [&_h2]:mt-10 [&_h2]:font-heading [&_h2]:text-2xl [&_h2]:text-brown-dark"
           dangerouslySetInnerHTML={{
-            __html: page?.content
-              ? page.content.includes("<")
-                ? page.content
-                : `<p>${page.content}</p>`
-              : DEFAULT_ABOUT_HTML,
+            __html: resolveStaticPageHtml(page?.content, DEFAULT_ABOUT_HTML),
           }}
         />
         <div className="mt-12">

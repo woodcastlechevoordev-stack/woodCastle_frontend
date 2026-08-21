@@ -1,4 +1,5 @@
 import { excerptFromHtml, getSiteUrl, siteInfo } from "./api";
+import { brand } from "./brand";
 import { ogImageUrl, safeImageUrl } from "./images";
 import type { Product } from "./types";
 import type { Metadata } from "next";
@@ -80,6 +81,7 @@ export function organizationJsonLd() {
       postalCode: siteInfo.postalCode,
       addressCountry: "IN",
     },
+    sameAs: [brand.instagramUrl, brand.facebookUrl],
   };
 }
 
@@ -93,6 +95,7 @@ export function localBusinessJsonLd() {
     telephone: siteInfo.phone.replace(/\s/g, ""),
     email: siteInfo.email,
     hasMap: siteInfo.mapsUrl,
+    sameAs: [brand.instagramUrl, brand.facebookUrl],
     address: {
       "@type": "PostalAddress",
       streetAddress: siteInfo.address,

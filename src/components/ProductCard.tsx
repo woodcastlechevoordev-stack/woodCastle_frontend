@@ -13,46 +13,38 @@ export function ProductCard({ product }: { product: Product }) {
 
   return (
     <article className="group">
-      <div className="relative">
-        <div className="relative aspect-[4/5] overflow-hidden rounded-xl border border-brown-light/60 bg-white shadow-sm">
-          <Link href={`/product/${product.slug}`} className="absolute inset-0 block">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-xl border border-brown-light/60 bg-white shadow-sm">
+        <Link href={`/product/${product.slug}`} className="absolute inset-0 block">
+          <Image
+            src={primary}
+            alt={product.name}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            className={
+              secondary
+                ? "object-cover transition-opacity duration-500 group-hover:opacity-0"
+                : "object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            }
+          />
+          {secondary && (
             <Image
-              src={primary}
-              alt={product.name}
+              src={secondary}
+              alt=""
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-              className={
-                secondary
-                  ? "object-cover transition-opacity duration-500 group-hover:opacity-0"
-                  : "object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-              }
+              className="object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
             />
-            {secondary && (
-              <Image
-                src={secondary}
-                alt=""
-                fill
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                className="object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-              />
-            )}
+          )}
+        </Link>
+
+        <div className="pointer-events-none absolute inset-x-3 bottom-3 opacity-100 transition-opacity duration-300 lg:pointer-events-auto lg:opacity-0 lg:group-hover:opacity-100">
+          <Link
+            href={`/product/${product.slug}#enquire`}
+            className="pointer-events-auto flex w-full items-center justify-center rounded-lg bg-brown-dark py-2.5 text-sm font-semibold text-cream transition-colors hover:bg-gold hover:text-brown-dark"
+          >
+            Enquire Now
           </Link>
-
-          <div className="pointer-events-none absolute inset-x-3 bottom-3 opacity-100 transition-opacity duration-300 lg:pointer-events-auto lg:opacity-0 lg:group-hover:opacity-100">
-            <Link
-              href={`/product/${product.slug}#enquire`}
-              className="pointer-events-auto flex w-full items-center justify-center rounded-lg bg-brown-dark py-2.5 text-sm font-semibold text-cream transition-colors hover:bg-gold hover:text-brown-dark"
-            >
-              Enquire Now
-            </Link>
-          </div>
         </div>
-
-        <ShareButton
-          title={product.name}
-          urlPath={`/product/${product.slug}`}
-          className="absolute right-3 top-3 z-10"
-        />
       </div>
 
       <div className="mt-4 space-y-1">
@@ -61,11 +53,18 @@ export function ProductCard({ product }: { product: Product }) {
             {categoryName}
           </p>
         )}
-        <Link href={`/product/${product.slug}`}>
-          <h3 className="font-heading text-lg text-brown-dark transition-colors group-hover:text-gold">
-            {product.name}
-          </h3>
-        </Link>
+        <div className="flex items-start gap-2">
+          <Link href={`/product/${product.slug}`} className="min-w-0 flex-1">
+            <h3 className="font-heading text-lg text-brown-dark transition-colors group-hover:text-gold">
+              {product.name}
+            </h3>
+          </Link>
+          <ShareButton
+            title={product.name}
+            urlPath={`/product/${product.slug}`}
+            className="mt-0.5 shrink-0"
+          />
+        </div>
         <p className="font-semibold text-gold">{formatPrice(product.price)}</p>
       </div>
     </article>

@@ -122,7 +122,7 @@ export function BlogForm({
             {metaTitle || "Meta title will appear here"}
           </p>
           <p className="truncate text-sm text-[#006621]">
-            woodcastle.in/blog/{slug || "slug"}
+            www.woodcastlefurniture.com/blog/{slug || "slug"}
           </p>
           <p className="mt-1 line-clamp-2 text-sm text-[#545454]">
             {metaDescription || "Meta description will appear here."}

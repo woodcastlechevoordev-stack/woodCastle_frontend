@@ -1,17 +1,12 @@
-import { Playfair_Display, Inter } from "next/font/google";
+import { Poppins } from "next/font/google";
 import type { Metadata } from "next";
 import "./globals.css";
 import { getSiteUrl, siteInfo } from "@/lib/api";
 
-const playfair = Playfair_Display({
+const poppins = Poppins({
   subsets: ["latin"],
-  variable: "--font-heading",
-  display: "swap",
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-body",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-poppins",
   display: "swap",
 });
 
@@ -33,6 +28,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_IN",
     siteName: siteInfo.name,
+    url: getSiteUrl(),
     images: [
       {
         url: "/brand/logo.png",
@@ -58,7 +54,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${playfair.variable} ${inter.variable} antialiased`}>
+      <body className={`${poppins.variable} ${poppins.className} antialiased`}>
         {children}
       </body>
     </html>

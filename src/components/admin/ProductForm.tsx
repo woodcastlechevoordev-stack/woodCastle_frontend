@@ -1,11 +1,12 @@
 "use client";
 
 import { CloudinaryImageUpload } from "@/components/admin/CloudinaryImageUpload";
+import { DuplicateNameDialog } from "@/components/admin/DuplicateNameDialog";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
-import { getLeafCategories, subcategoryGroups } from "@/lib/categories";
-import type { Category } from "@/lib/types";
+import { flattenCategories, getLeafCategories, subcategoryGroups } from "@/lib/categories";
+import type { Category, DuplicateNameCheck } from "@/lib/types";
 import {
   clearFormDraft,
   readFormDraft,
@@ -30,6 +31,18 @@ type ProductDraft = {
   images: string[];
 };
 
+type DuplicatePrompt = {
+  name: string;
+  categoryId: string;
+  subcategoryName: string;
+  suggestedName: string;
+  suggestedSlug: string;
+};
+
+function duplicateCheckKey(name: string, categoryId: string) {
+  return `${name.trim().toLowerCase()}|${categoryId}`;
+}
+
 export function ProductForm({
   defaultValues,
   productId,
@@ -41,9 +54,14 @@ export function ProductForm({
   const [categories, setCategories] = useState<Category[]>([]);
   const restoredDraft = useRef(false);
   const skipDraftWrite = useRef(false);
+  const dismissedDuplicates = useRef(new Set<string>());
+  const originalName = (defaultValues?.name ?? "").trim();
+  const originalCategoryId = defaultValues?.categoryId ?? "";
   const initialImages = defaultValues?.images ?? [];
   const [images, setImages] = useState<string[]>(initialImages);
   const [message, setMessage] = useState("");
+  const [duplicatePrompt, setDuplicatePrompt] = useState<DuplicatePrompt | null>(null);
+  const [keepNameNote, setKeepNameNote] = useState(false);
 
   const form = useForm<Values>({
     resolver: zodResolver(productFormSchema),
@@ -109,6 +127,90 @@ export function ProductForm({
     } satisfies ProductDraft);
   }, [form, images, productId, values]);
 
+  useEffect(() => {
+    const name = values.name.trim();
+    const categoryId = values.categoryId;
+    if (!name || !categoryId) {
+      setDuplicatePrompt(null);
+      setKeepNameNote(false);
+      return;
+    }
+
+    if (productId) {
+      const nameChanged = name.toLowerCase() !== originalName.toLowerCase();
+      const categoryChanged = categoryId !== originalCategoryId;
+      if (!nameChanged && !categoryChanged) {
+        setDuplicatePrompt(null);
+        return;
+      }
+    }
+
+    const key = duplicateCheckKey(name, categoryId);
+    if (dismissedDuplicates.current.has(key)) {
+      setDuplicatePrompt(null);
+      return;
+    }
+    setKeepNameNote(false);
+
+    const subcategoryName =
+      flattenCategories(categories).find((c) => c.id === categoryId)?.name ??
+      "this subcategory";
+    const controller = new AbortController();
+    const t = window.setTimeout(async () => {
+      try {
+        const params = new URLSearchParams({ name, categoryId });
+        const res = await fetch(`/api/admin/products/check-duplicate-name?${params}`, {
+          signal: controller.signal,
+        });
+        if (!res.ok) return;
+        const data = (await res.json()) as DuplicateNameCheck;
+        if (!data.isDuplicate || !data.suggestedName) {
+          setDuplicatePrompt(null);
+          return;
+        }
+        setDuplicatePrompt({
+          name,
+          categoryId,
+          subcategoryName,
+          suggestedName: data.suggestedName,
+          suggestedSlug: data.suggestedSlug || slugify(data.suggestedName),
+        });
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+      }
+    }, 300);
+
+    return () => {
+      window.clearTimeout(t);
+      controller.abort();
+    };
+  }, [
+    categories,
+    originalCategoryId,
+    originalName,
+    productId,
+    values.categoryId,
+    values.name,
+  ]);
+
+  function applySuggestedName() {
+    if (!duplicatePrompt) return;
+    form.setValue("name", duplicatePrompt.suggestedName, { shouldValidate: true, shouldDirty: true });
+    form.setValue("slug", duplicatePrompt.suggestedSlug, { shouldValidate: true, shouldDirty: true });
+    setDuplicatePrompt(null);
+    setKeepNameNote(false);
+  }
+
+  function keepTypedName() {
+    if (duplicatePrompt) {
+      dismissedDuplicates.current.add(
+        duplicateCheckKey(duplicatePrompt.name, duplicatePrompt.categoryId)
+      );
+    }
+    setDuplicatePrompt(null);
+    setKeepNameNote(true);
+  }
+
   function onNameBlur() {
     const name = form.getValues("name");
     if (!form.getValues("slug") && name) {
@@ -169,12 +271,20 @@ export function ProductForm({
       className="mx-auto max-w-3xl space-y-6"
     >
       <div className="grid gap-4 sm:grid-cols-2">
-        <Input
-          id="name"
-          label="Name"
-          error={form.formState.errors.name?.message}
-          {...form.register("name", { onBlur: onNameBlur })}
-        />
+        <div>
+          <Input
+            id="name"
+            label="Name"
+            error={form.formState.errors.name?.message}
+            {...form.register("name", { onBlur: onNameBlur })}
+          />
+          {keepNameNote && (
+            <p className="mt-1.5 text-xs text-brown-mid" data-testid="keep-name-note">
+              You kept this name. Saving may fail if another product in this subcategory
+              already uses it — slugs must be unique.
+            </p>
+          )}
+        </div>
         <Input
           id="slug"
           label="Slug"
@@ -285,6 +395,19 @@ export function ProductForm({
           Cancel
         </Button>
       </div>
+      <DuplicateNameDialog
+        open={Boolean(duplicatePrompt)}
+        name={duplicatePrompt?.name ?? ""}
+        subcategoryName={
+          flattenCategories(categories).find((c) => c.id === duplicatePrompt?.categoryId)
+            ?.name ??
+          duplicatePrompt?.subcategoryName ??
+          ""
+        }
+        suggestedName={duplicatePrompt?.suggestedName ?? ""}
+        onConfirm={applySuggestedName}
+        onKeepName={keepTypedName}
+      />
     </form>
   );
 }

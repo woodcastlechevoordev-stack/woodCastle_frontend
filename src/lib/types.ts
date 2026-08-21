@@ -34,6 +34,15 @@ export type Product = {
   };
 };
 
+/** Response from GET /api/admin/products/check-duplicate-name (backend spec §5a3). */
+export type DuplicateNameCheck = {
+  isDuplicate: boolean;
+  existingCount?: number;
+  suggestedCode?: string;
+  suggestedName?: string;
+  suggestedSlug?: string;
+};
+
 export type BlogPost = {
   id: string;
   title: string;
@@ -91,6 +100,36 @@ export type StaticPage = {
   title: string;
   content: string;
   updatedAt?: string;
+};
+
+export type Review = {
+  id: string;
+  customerName: string;
+  rating: number;
+  reviewText: string;
+  customerPhoto: string | null;
+  productId: string | null;
+  isActive: boolean;
+  createdAt: string;
+  product?: {
+    id: string;
+    name: string;
+    slug: string;
+  } | null;
+};
+
+export type GoogleReview = {
+  authorName: string;
+  rating: number;
+  text: string;
+  relativeTimeDescription: string;
+  profilePhotoUrl?: string | null;
+};
+
+export type GoogleReviewsPayload = {
+  rating: number;
+  totalReviews: number;
+  reviews: GoogleReview[];
 };
 
 export type SiteInfo = {

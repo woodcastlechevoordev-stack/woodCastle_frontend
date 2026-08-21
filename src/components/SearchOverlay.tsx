@@ -214,7 +214,7 @@ export function SearchOverlay({
         className="flex w-full items-center gap-2 border-t border-brown-light/40 px-4 py-2.5 text-left text-sm font-semibold text-gold hover:bg-cream"
       >
         <Search size={14} />
-        View all results for &lsquo;{trimmed}&rsquo;
+        View All Results For &lsquo;{trimmed}&rsquo;
       </button>
     </div>
   );

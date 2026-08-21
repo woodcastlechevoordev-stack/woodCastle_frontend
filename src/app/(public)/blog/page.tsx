@@ -32,7 +32,7 @@ export default async function BlogPage({ searchParams }: Props) {
     <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
       <header className="max-w-2xl">
         <p className="eyebrow">Journal</p>
-        <h1 className="mt-3 font-heading text-4xl sm:text-5xl">From the studio</h1>
+        <h1 className="mt-3 font-heading text-4xl sm:text-5xl">From The Studio</h1>
         <p className="mt-4 text-brown-mid">
           Practical guides and stories about living with solid wood furniture.
         </p>
