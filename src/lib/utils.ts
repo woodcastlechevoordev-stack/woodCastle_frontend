@@ -56,6 +56,21 @@ export function resolveStaticPageHtml(
   return /<\/?[a-z][\s\S]*>/i.test(raw) ? raw : `<p>${raw}</p>`;
 }
 
+/**
+ * Trailing auto-generated product code, e.g. " DC-02".
+ * Display fallback only — the live check always sends the raw typed name (spec §5a3).
+ */
+export function stripProductCodeSuffix(name: string): string {
+  let base = String(name ?? "").trim();
+  const pattern = /\s+[A-Z0-9]{2,4}-\d{2,}$/i;
+  let stripped = base.replace(pattern, "").trim();
+  while (stripped !== base) {
+    base = stripped;
+    stripped = base.replace(pattern, "").trim();
+  }
+  return base;
+}
+
 export function slugify(value: string): string {
   return value
     .toLowerCase()

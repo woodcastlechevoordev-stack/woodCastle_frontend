@@ -94,7 +94,8 @@ async function mockCloudinary(page: Page) {
         apiKey: "123",
         timestamp: 1,
         signature: "test",
-        folder: "woodcastle/products",
+        folder: "products",
+        format: "webp",
       }),
     });
   });
@@ -104,7 +105,8 @@ async function mockCloudinary(page: Page) {
       contentType: "application/json",
       body: JSON.stringify({
         secure_url:
-          "https://res.cloudinary.com/demo/image/upload/sample.jpg",
+          "https://res.cloudinary.com/demo/image/upload/sample.webp",
+        bytes: 340_000,
       }),
     });
   });

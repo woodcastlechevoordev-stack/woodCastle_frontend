@@ -109,7 +109,7 @@ export function ReviewForm({
         mode="single"
         label="Customer photo (optional)"
         helpText="Drag and drop a photo, or leave empty for a name initial."
-        folder="woodcastle/reviews"
+        folder="reviews"
         value={photo}
         onChange={(url) => {
           setPhoto(url);

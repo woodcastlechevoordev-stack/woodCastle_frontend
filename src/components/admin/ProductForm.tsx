@@ -11,6 +11,7 @@ import {
   clearFormDraft,
   readFormDraft,
   slugify,
+  stripProductCodeSuffix,
   unwrapList,
   writeFormDraft,
 } from "@/lib/utils";
@@ -201,7 +202,9 @@ export function ProductForm({
         }
         setDuplicatePrompt({
           checkedName: currentName,
-          baseName: data.baseName || currentName.trim(),
+          baseName:
+            data.baseName ||
+            stripProductCodeSuffix(data.suggestedName || currentName),
           categoryId: currentCategoryId,
           subcategoryName,
           suggestedName: data.suggestedName,
@@ -390,7 +393,7 @@ export function ProductForm({
         mode="multi"
         label="Images"
         helpText="Drag and drop to upload directly to Cloudinary. First image is the primary listing image."
-        folder="woodcastle/products"
+        folder="products"
         value={images}
         onChange={setImages}
       />
