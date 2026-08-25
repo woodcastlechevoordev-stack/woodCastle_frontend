@@ -38,6 +38,8 @@ export type Product = {
 export type DuplicateNameCheck = {
   isDuplicate: boolean;
   existingCount?: number;
+  /** Name with any previous product code stripped — used in the duplicate dialog. */
+  baseName?: string;
   suggestedCode?: string;
   suggestedName?: string;
   suggestedSlug?: string;
