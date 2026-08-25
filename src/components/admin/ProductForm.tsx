@@ -32,7 +32,8 @@ type ProductDraft = {
 };
 
 type DuplicatePrompt = {
-  name: string;
+  checkedName: string;
+  baseName: string;
   categoryId: string;
   subcategoryName: string;
   suggestedName: string;
@@ -128,37 +129,63 @@ export function ProductForm({
   }, [form, images, productId, values]);
 
   useEffect(() => {
-    const name = values.name.trim();
-    const categoryId = values.categoryId;
-    if (!name || !categoryId) {
+    const nameTrigger = values.name;
+    const categoryIdTrigger = values.categoryId;
+    if (!nameTrigger.trim() || !categoryIdTrigger) {
       setDuplicatePrompt(null);
       setKeepNameNote(false);
       return;
     }
 
     if (productId) {
-      const nameChanged = name.toLowerCase() !== originalName.toLowerCase();
-      const categoryChanged = categoryId !== originalCategoryId;
+      const nameChanged = nameTrigger.trim().toLowerCase() !== originalName.toLowerCase();
+      const categoryChanged = categoryIdTrigger !== originalCategoryId;
       if (!nameChanged && !categoryChanged) {
         setDuplicatePrompt(null);
         return;
       }
     }
 
-    const key = duplicateCheckKey(name, categoryId);
-    if (dismissedDuplicates.current.has(key)) {
+    if (dismissedDuplicates.current.has(duplicateCheckKey(nameTrigger, categoryIdTrigger))) {
       setDuplicatePrompt(null);
       return;
     }
     setKeepNameNote(false);
 
-    const subcategoryName =
-      flattenCategories(categories).find((c) => c.id === categoryId)?.name ??
-      "this subcategory";
     const controller = new AbortController();
     const t = window.setTimeout(async () => {
       try {
-        const params = new URLSearchParams({ name, categoryId });
+        // Always read the live field — never a name captured when the timer started.
+        const currentName = form.getValues("name");
+        const currentCategoryId = form.getValues("categoryId");
+        if (!currentName.trim() || !currentCategoryId) {
+          setDuplicatePrompt(null);
+          return;
+        }
+
+        if (productId) {
+          const nameChanged =
+            currentName.trim().toLowerCase() !== originalName.toLowerCase();
+          const categoryChanged = currentCategoryId !== originalCategoryId;
+          if (!nameChanged && !categoryChanged) {
+            setDuplicatePrompt(null);
+            return;
+          }
+        }
+
+        const key = duplicateCheckKey(currentName, currentCategoryId);
+        if (dismissedDuplicates.current.has(key)) {
+          setDuplicatePrompt(null);
+          return;
+        }
+
+        const subcategoryName =
+          flattenCategories(categories).find((c) => c.id === currentCategoryId)?.name ??
+          "this subcategory";
+        const params = new URLSearchParams({
+          name: currentName,
+          categoryId: currentCategoryId,
+        });
         const res = await fetch(`/api/admin/products/check-duplicate-name?${params}`, {
           signal: controller.signal,
         });
@@ -168,9 +195,14 @@ export function ProductForm({
           setDuplicatePrompt(null);
           return;
         }
+        if (data.suggestedName.trim() === currentName.trim()) {
+          setDuplicatePrompt(null);
+          return;
+        }
         setDuplicatePrompt({
-          name,
-          categoryId,
+          checkedName: currentName,
+          baseName: data.baseName || currentName.trim(),
+          categoryId: currentCategoryId,
           subcategoryName,
           suggestedName: data.suggestedName,
           suggestedSlug: data.suggestedSlug || slugify(data.suggestedName),
@@ -186,6 +218,7 @@ export function ProductForm({
     };
   }, [
     categories,
+    form,
     originalCategoryId,
     originalName,
     productId,
@@ -195,8 +228,11 @@ export function ProductForm({
 
   function applySuggestedName() {
     if (!duplicatePrompt) return;
-    form.setValue("name", duplicatePrompt.suggestedName, { shouldValidate: true, shouldDirty: true });
-    form.setValue("slug", duplicatePrompt.suggestedSlug, { shouldValidate: true, shouldDirty: true });
+    const { suggestedName, suggestedSlug } = duplicatePrompt;
+    // Full replace — never append/concatenate onto the typed value
+    // (that produced "Dining Chair DC-02 DC-2").
+    form.setValue("name", suggestedName, { shouldValidate: true, shouldDirty: true });
+    form.setValue("slug", suggestedSlug, { shouldValidate: true, shouldDirty: true });
     setDuplicatePrompt(null);
     setKeepNameNote(false);
   }
@@ -204,7 +240,7 @@ export function ProductForm({
   function keepTypedName() {
     if (duplicatePrompt) {
       dismissedDuplicates.current.add(
-        duplicateCheckKey(duplicatePrompt.name, duplicatePrompt.categoryId)
+        duplicateCheckKey(duplicatePrompt.checkedName, duplicatePrompt.categoryId)
       );
     }
     setDuplicatePrompt(null);
@@ -397,7 +433,7 @@ export function ProductForm({
       </div>
       <DuplicateNameDialog
         open={Boolean(duplicatePrompt)}
-        name={duplicatePrompt?.name ?? ""}
+        baseName={duplicatePrompt?.baseName ?? ""}
         subcategoryName={
           flattenCategories(categories).find((c) => c.id === duplicatePrompt?.categoryId)
             ?.name ??

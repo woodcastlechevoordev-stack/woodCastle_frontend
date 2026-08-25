@@ -5,7 +5,7 @@ import { useEffect, useId, useRef } from "react";
 
 type DuplicateNameDialogProps = {
   open: boolean;
-  name: string;
+  baseName: string;
   subcategoryName: string;
   suggestedName: string;
   onConfirm: () => void;
@@ -14,7 +14,7 @@ type DuplicateNameDialogProps = {
 
 export function DuplicateNameDialog({
   open,
-  name,
+  baseName,
   subcategoryName,
   suggestedName,
   onConfirm,
@@ -55,7 +55,7 @@ export function DuplicateNameDialog({
           Duplicate product name
         </h3>
         <p className="mt-3 text-sm leading-relaxed text-brown-mid">
-          A product named &ldquo;{name}&rdquo; already exists in {subcategoryName}.
+          A product named &ldquo;{baseName}&rdquo; already exists in {subcategoryName}.
           Suggested name: &ldquo;{suggestedName}&rdquo;.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
