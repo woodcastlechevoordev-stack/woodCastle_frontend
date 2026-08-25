@@ -1,6 +1,6 @@
 import { proxyToBackend } from "@/lib/admin-proxy";
 import {
-  sanitizeCloudinaryFolder,
+  toCloudinaryFolder,
   signCloudinaryUpload,
 } from "@/lib/cloudinary-sign";
 import { cookies } from "next/headers";
@@ -12,7 +12,7 @@ async function localSignedPayload(folder?: string | null) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const payload = signCloudinaryUpload(folder);
+  const payload = signCloudinaryUpload(toCloudinaryFolder(folder));
   if (!payload) {
     return NextResponse.json(
       {
@@ -32,7 +32,7 @@ async function localSignedPayload(folder?: string | null) {
  */
 export async function POST(req: NextRequest) {
   const body = (await req.json().catch(() => ({}))) as { folder?: string };
-  const folder = sanitizeCloudinaryFolder(body.folder);
+  const folder = toCloudinaryFolder(body.folder);
 
   const proxied = await proxyToBackend(req, "/api/admin/upload/signature", {
     method: "POST",
@@ -50,5 +50,5 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  return localSignedPayload(req.nextUrl.searchParams.get("folder"));
+  return localSignedPayload(toCloudinaryFolder(req.nextUrl.searchParams.get("folder")));
 }

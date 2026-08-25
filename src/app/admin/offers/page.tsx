@@ -240,7 +240,7 @@ export default function AdminOffersPage() {
                 mode="single"
                 label="Banner image"
                 helpText="Drag and drop to upload the offer banner directly to Cloudinary."
-                folder="woodcastle/offers"
+                folder="offers"
                 value={bannerImage}
                 onChange={(url) => {
                   setBannerImage(url);

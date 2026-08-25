@@ -446,7 +446,7 @@ export default function AdminCategoriesPage() {
                   mode="single"
                   label="Category image"
                   helpText="Drag and drop to upload the category tile image directly to Cloudinary."
-                  folder="woodcastle/categories"
+                  folder="categories"
                   value={imageUrl}
                   onChange={(url) => {
                     setImageUrl(url);

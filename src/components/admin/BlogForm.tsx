@@ -83,7 +83,7 @@ export function BlogForm({
         mode="single"
         label="Cover image"
         helpText="Drag and drop to upload the post cover image directly to Cloudinary."
-        folder="woodcastle/blog"
+        folder="blog"
         value={coverImage}
         onChange={(url) => {
           setCoverImage(url);

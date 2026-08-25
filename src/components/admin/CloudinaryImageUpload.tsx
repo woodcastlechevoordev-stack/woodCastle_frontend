@@ -1,7 +1,14 @@
 "use client";
 
-import { uploadToCloudinary } from "@/lib/cloudinary-upload";
+import {
+  formatFileSize,
+  uploadSavingsLabel,
+  uploadToCloudinary,
+} from "@/lib/cloudinary-upload";
+import { toCloudinaryFolder } from "@/lib/cloudinary-sign";
 import { useState } from "react";
+
+type SizeInfo = { original: number; converted: number };
 
 type SingleProps = {
   mode: "single";
@@ -25,7 +32,7 @@ type CloudinaryImageUploadProps = SingleProps | MultiProps;
 
 export function CloudinaryImageUpload(props: CloudinaryImageUploadProps) {
   const {
-    folder = "woodcastle",
+    folder = "products",
     label = "Images",
     helpText = "Drag and drop to upload directly to Cloudinary. First image is the primary listing image.",
   } = props;
@@ -34,6 +41,7 @@ export function CloudinaryImageUpload(props: CloudinaryImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
+  const [sizes, setSizes] = useState<Record<string, SizeInfo>>({});
 
   const images = props.mode === "multi" ? props.value : props.value ? [props.value] : [];
 
@@ -51,15 +59,24 @@ export function CloudinaryImageUpload(props: CloudinaryImageUploadProps) {
       }
 
       const uploaded: string[] = [];
+      const nextSizes: Record<string, SizeInfo> = { ...sizes };
+      const targetFolder = toCloudinaryFolder(folder);
       for (let i = 0; i < list.length; i++) {
         const file = list[i];
-        const url = await uploadToCloudinary(file, folder, (p) => {
+        const result = await uploadToCloudinary(file, targetFolder, (p) => {
           const base = (i / list.length) * 100;
           const slice = p.percent / list.length;
           setProgress(Math.round(base + slice));
         });
-        uploaded.push(url);
+        uploaded.push(result.url);
+        if (result.bytes != null) {
+          nextSizes[result.url] = {
+            original: result.originalBytes,
+            converted: result.bytes,
+          };
+        }
       }
+      setSizes(nextSizes);
 
       if (props.mode === "single") {
         props.onChange(uploaded[0] || null);
@@ -75,6 +92,14 @@ export function CloudinaryImageUpload(props: CloudinaryImageUploadProps) {
   }
 
   function removeAt(index: number) {
+    const url = images[index];
+    if (url) {
+      setSizes((prev) => {
+        const next = { ...prev };
+        delete next[url];
+        return next;
+      });
+    }
     if (props.mode === "single") {
       props.onChange(null);
       return;
@@ -118,6 +143,7 @@ export function CloudinaryImageUpload(props: CloudinaryImageUploadProps) {
             multiple={props.mode === "multi"}
             disabled={uploading}
             className="hidden"
+            data-testid="cloudinary-file-input"
             onChange={(e) => {
               void handleFiles(e.target.files);
               e.target.value = "";
@@ -142,52 +168,68 @@ export function CloudinaryImageUpload(props: CloudinaryImageUploadProps) {
             props.mode === "single" ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-2 sm:grid-cols-4"
           }`}
         >
-          {images.map((url, i) => (
-            <li
-              key={url + i}
-              className="relative overflow-hidden rounded-lg border border-brown-light"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={url}
-                alt=""
-                className={
-                  props.mode === "single"
-                    ? "aspect-[16/9] w-full object-cover"
-                    : "aspect-square w-full object-cover"
-                }
-              />
-              <div className="absolute inset-x-0 bottom-0 flex gap-1 bg-brown-dark/70 p-1">
-                {props.mode === "multi" && (
+          {images.map((url, i) => {
+            const size = sizes[url];
+            return (
+              <li
+                key={url + i}
+                className="relative overflow-hidden rounded-lg border border-brown-light"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={url}
+                  alt=""
+                  className={
+                    props.mode === "single"
+                      ? "aspect-[16/9] w-full object-cover"
+                      : "aspect-square w-full object-cover"
+                  }
+                />
+                {size && (
+                  <p
+                    className="bg-cream px-2 py-1 text-center text-[11px] leading-snug text-brown-mid"
+                    data-testid="upload-size-label"
+                  >
+                    {uploadSavingsLabel(size.original, size.converted)}
+                    <span className="sr-only">
+                      {" "}
+                      Original {formatFileSize(size.original)}, converted{" "}
+                      {formatFileSize(size.converted)}
+                    </span>
+                  </p>
+                )}
+                <div className="absolute inset-x-0 top-0 flex gap-1 bg-brown-dark/70 p-1">
+                  {props.mode === "multi" && (
+                    <button
+                      type="button"
+                      className="flex-1 text-xs text-cream disabled:opacity-40"
+                      disabled={i === 0}
+                      onClick={() => moveImage(i, i - 1)}
+                    >
+                      ←
+                    </button>
+                  )}
                   <button
                     type="button"
-                    className="flex-1 text-xs text-cream disabled:opacity-40"
-                    disabled={i === 0}
-                    onClick={() => moveImage(i, i - 1)}
+                    className="flex-1 text-xs text-cream"
+                    onClick={() => removeAt(i)}
                   >
-                    ←
+                    Remove
                   </button>
-                )}
-                <button
-                  type="button"
-                  className="flex-1 text-xs text-cream"
-                  onClick={() => removeAt(i)}
-                >
-                  Remove
-                </button>
-                {props.mode === "multi" && (
-                  <button
-                    type="button"
-                    className="flex-1 text-xs text-cream disabled:opacity-40"
-                    disabled={i === images.length - 1}
-                    onClick={() => moveImage(i, i + 1)}
-                  >
-                    →
-                  </button>
-                )}
-              </div>
-            </li>
-          ))}
+                  {props.mode === "multi" && (
+                    <button
+                      type="button"
+                      className="flex-1 text-xs text-cream disabled:opacity-40"
+                      disabled={i === images.length - 1}
+                      onClick={() => moveImage(i, i + 1)}
+                    >
+                      →
+                    </button>
+                  )}
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

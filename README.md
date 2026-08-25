@@ -2,6 +2,8 @@
 
 Next.js 15 storefront and admin panel for Woodcastle, connected to the Express/Prisma backend.
 
+Phase 1 contracts: [`Woodcastle Frontend Spec.md`](./Woodcastle%20Frontend%20Spec.md) and [`woodcastle-backend-spec.md`](./woodcastle-backend-spec.md).
+
 ## Stack
 
 - Next.js 15 (App Router) + TypeScript
@@ -24,7 +26,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 - URL: [/admin/login](http://localhost:3000/admin/login)
 - Username / password: from backend seed — default `admin` / `admin123`
-- OTP for enquiries: returned as `debugOtp` when backend `OTP_PROVIDER=dev`
+- Enquiries: no OTP in Phase 1 — the form posts to `/api/enquiries` and opens a `wa.me` link
 
 ### Env flavours
 

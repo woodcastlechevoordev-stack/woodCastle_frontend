@@ -52,4 +52,38 @@ test.describe("Admin pages editor", () => {
     );
     expect(aboutGetCount).toBeGreaterThan(0);
   });
+
+  test("Terms editor loads GET /api/admin/pages/terms (not terms-and-conditions)", async ({
+    page,
+  }) => {
+    const requested: string[] = [];
+
+    await page.route("**/api/admin/pages/terms", async (route) => {
+      if (route.request().method() !== "GET") {
+        await route.continue();
+        return;
+      }
+      requested.push(new URL(route.request().url()).pathname);
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          key: "terms",
+          title: "Terms & Conditions",
+          content: "<p>Fetched terms content from API</p>",
+        }),
+      });
+    });
+
+    await login(page);
+    await page.goto("/admin/pages");
+    await page.getByRole("button", { name: "Edit" }).nth(1).click();
+    await expect(page.getByRole("heading", { name: "Edit Terms & Conditions" })).toBeVisible();
+    await expect(page.getByTestId("page-editor-form")).toBeVisible();
+    await expect(page.locator("#page-content .ProseMirror")).toContainText(
+      "Fetched terms content from API"
+    );
+    expect(requested.some((path) => path.endsWith("/api/admin/pages/terms"))).toBe(true);
+    expect(requested.some((path) => path.includes("terms-and-conditions"))).toBe(false);
+  });
 });

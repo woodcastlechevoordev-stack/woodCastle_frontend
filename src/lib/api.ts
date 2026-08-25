@@ -2,6 +2,7 @@ import { brand } from "./brand";
 import { backendFetch } from "./backend";
 import { findCategoryBySlug, nestCategories } from "./categories";
 import { safeImageUrls } from "./images";
+import { staticPageCacheTag } from "./static-pages";
 import { queryString, stripHtml } from "./utils";
 import type {
   BlogPost,
@@ -194,7 +195,16 @@ export async function getActiveOffers(): Promise<Offer[]> {
 
 export async function getStaticPage(key: string): Promise<StaticPage | null> {
   try {
-    return await backendFetch<StaticPage>(`/api/pages/${key}`, revalidateOpt);
+    const data = await backendFetch<StaticPage | { page?: StaticPage }>(
+      `/api/pages/${key}`,
+      { next: { revalidate: 60, tags: [staticPageCacheTag(key)] } }
+    );
+    if (!data || typeof data !== "object") return null;
+    if ("page" in data && data.page && typeof data.page === "object") {
+      return data.page;
+    }
+    if ("key" in data && "title" in data) return data as StaticPage;
+    return null;
   } catch {
     return null;
   }
