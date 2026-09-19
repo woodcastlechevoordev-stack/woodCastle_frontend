@@ -4,8 +4,10 @@ import { ProductCard } from "@/components/ProductCard";
 import { ProductGallery } from "@/components/ProductGallery";
 import { ReviewCard } from "@/components/ReviewCard";
 import { RichContent } from "@/components/RichContent";
+import { ProductEnquireDock } from "@/components/ProductEnquireDock";
 import { ShareButton } from "@/components/ShareButton";
-import { excerptFromHtml, formatPrice, getProductBySlug, getProducts, getReviews } from "@/lib/api";
+import { WhatsAppIcon } from "@/components/WhatsAppIcon";
+import { excerptFromHtml, formatPrice, getProductBySlug, getProducts, getReviews, getSiteUrl } from "@/lib/api";
 import {
   breadcrumbJsonLd,
   JsonLd,
@@ -65,7 +67,7 @@ export default async function ProductPage({ params }: Props) {
         ])}
       />
 
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+      <div className="mx-auto max-w-7xl px-4 py-10 pb-28 sm:px-6 lg:px-8 lg:py-14">
         <Breadcrumbs
           items={[
             { label: "Home", href: "/" },
@@ -81,22 +83,34 @@ export default async function ProductPage({ params }: Props) {
 
           <div>
             {category && <p className="eyebrow">{category.name}</p>}
-            <div className="mt-3 flex items-start gap-3">
-              <h1 className="min-w-0 flex-1 font-heading text-3xl sm:text-4xl lg:text-5xl">
-                {product.name}
-              </h1>
-              <ShareButton
-                title={product.name}
-                urlPath={`/product/${slug}`}
-                className="mt-1 shrink-0 sm:mt-2"
-              />
+            <h1 className="mt-3 font-heading text-3xl sm:text-4xl lg:text-5xl">
+              {product.name}
+            </h1>
+            <div className="mt-4 flex items-center justify-between gap-3">
+              <p className="min-w-0 text-2xl font-semibold text-gold">
+                {formatPrice(product.price)}
+              </p>
+              <div className="flex shrink-0 items-center gap-2">
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(
+                    `${product.name} — ${getSiteUrl()}/product/${slug}`
+                  )}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={`Share ${product.name} on WhatsApp`}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-brown-light/60 bg-white/95 text-[#25D366] shadow-sm transition-colors hover:border-gold hover:text-gold"
+                >
+                  <WhatsAppIcon size={16} />
+                </a>
+                <ShareButton
+                  title={product.name}
+                  urlPath={`/product/${slug}`}
+                />
+              </div>
             </div>
-            <p className="mt-4 text-2xl font-semibold text-gold">
-              {formatPrice(product.price)}
-            </p>
             <p className="mt-6 text-brown-mid">{shortDescription}</p>
 
-            <div className="mt-8 scroll-mt-28" id="enquire">
+            <div className="mt-8 scroll-mt-28 pb-6 lg:pb-0" id="enquire">
               <EnquiryForm productId={product.id} productName={product.name} />
             </div>
           </div>
@@ -139,14 +153,7 @@ export default async function ProductPage({ params }: Props) {
         )}
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-brown-light bg-cream p-3 lg:hidden">
-        <a
-          href="#enquire"
-          className="flex w-full items-center justify-center rounded-lg bg-gold py-3.5 text-sm font-semibold text-brown-dark"
-        >
-          Enquire Now
-        </a>
-      </div>
+      <ProductEnquireDock />
     </>
   );
 }
