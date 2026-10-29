@@ -208,7 +208,9 @@ ${workbookRels}
 }
 
 export function downloadXlsx(filename: string, bytes: Uint8Array) {
-  const blob = new Blob([bytes], {
+  const buffer = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(buffer).set(bytes);
+  const blob = new Blob([buffer], {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
   const url = URL.createObjectURL(blob);
