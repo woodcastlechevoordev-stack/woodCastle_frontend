@@ -1,7 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 
 const ADMIN_USER = process.env.ADMIN_USER || "admin";
-const ADMIN_PASS = process.env.ADMIN_PASS || "admin123";
+const ADMIN_PASS = process.env.ADMIN_PASS;
 
 async function login(page: Page) {
   await page.goto("/admin/login");
