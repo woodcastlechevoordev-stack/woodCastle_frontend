@@ -25,7 +25,7 @@ Open [http://localhost:3000](http://localhost:3000).
 ### Admin
 
 - URL: [/admin/login](http://localhost:3000/admin/login)
-- Username / password: from backend seed — default `admin` / `admin123`
+- Username / password: set on the backend (`SEED_ADMIN_PASSWORD`). Do not display credentials on the login page. Change the password from `/admin/settings`.
 - Enquiries: no OTP in Phase 1 — the form posts to `/api/enquiries` and opens a `wa.me` link
 
 ### Env flavours

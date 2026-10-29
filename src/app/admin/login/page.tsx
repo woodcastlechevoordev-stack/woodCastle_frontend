@@ -2,9 +2,9 @@
 
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { brand } from "@/lib/brand";
 import { loginSchema, totpSchema } from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -72,68 +72,110 @@ function LoginForm() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-cream px-4">
-      <div className="w-full max-w-md rounded-xl border border-brown-light bg-white p-8 shadow-sm">
-        <div className="text-center">
-          <Image
-            src="/brand/logo.png"
-            alt="Woodcastle Furniture"
-            width={865}
-            height={479}
-            priority
-            className="mx-auto h-16 w-auto object-contain sm:h-20"
-          />
-          <p className="mt-4 text-sm font-medium uppercase tracking-widest text-brown-mid">
-            Admin Panel
+    <div className="grid min-h-[100dvh] bg-cream lg:grid-cols-2">
+      <aside className="relative hidden overflow-hidden bg-brown-dark text-cream lg:flex lg:flex-col lg:justify-between lg:px-14 lg:py-12 xl:px-16">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.07]"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")",
+          }}
+        />
+        <div className="relative">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-gold">
+            Woodcastle
           </p>
-          <div className="section-divider mx-auto mt-5 max-w-[120px]" />
         </div>
+        <div className="relative max-w-md">
+          <h2 className="font-heading text-5xl leading-[1.1] tracking-tight text-cream">
+            Studio
+            <br />
+            access
+          </h2>
+          <p className="mt-6 max-w-sm text-sm leading-relaxed text-cream/70">
+            {brand.legacyLine}
+          </p>
+        </div>
+        <p className="relative text-[11px] uppercase tracking-[0.2em] text-cream/40">
+          {brand.establishedYear} · {brand.locationShort}
+        </p>
+      </aside>
 
-        {step === "credentials" ? (
-          <form onSubmit={loginForm.handleSubmit(onLogin)} className="mt-8 space-y-4">
-            <Input
-              id="username"
-              label="Username"
-              autoComplete="username"
-              error={loginForm.formState.errors.username?.message}
-              {...loginForm.register("username")}
-            />
-            <Input
-              id="password"
-              label="Password"
-              type="password"
-              autoComplete="current-password"
-              error={loginForm.formState.errors.password?.message}
-              {...loginForm.register("password")}
-            />
-            {error && <p className="text-sm text-red-600">{error}</p>}
-            <Button type="submit" className="w-full" disabled={loginForm.formState.isSubmitting}>
-              {loginForm.formState.isSubmitting ? "Signing in…" : "Sign In"}
-            </Button>
-            <p className="text-center text-xs text-brown-light">
-              Default: admin / admin123
-            </p>
-          </form>
-        ) : (
-          <form onSubmit={totpForm.handleSubmit(onTotp)} className="mt-8 space-y-4">
-            <p className="text-sm text-brown-mid">
-              Enter the 6-digit code from Google Authenticator.
-            </p>
-            <Input
-              id="totp"
-              label="Authenticator code"
-              inputMode="numeric"
-              maxLength={6}
-              error={totpForm.formState.errors.code?.message}
-              {...totpForm.register("code")}
-            />
-            {error && <p className="text-sm text-red-600">{error}</p>}
-            <Button type="submit" className="w-full">
-              Verify
-            </Button>
-          </form>
-        )}
-      </div>
+      <main className="flex items-center justify-center px-6 py-16 sm:px-10">
+        <div className="w-full max-w-[400px]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-gold lg:hidden">
+            Woodcastle
+          </p>
+          <h1 className="mt-5 font-heading text-3xl tracking-tight text-brown-dark sm:text-4xl lg:mt-0">
+            {step === "credentials" ? "Sign in" : "Verify"}
+          </h1>
+          <p className="mt-2 text-sm text-brown-mid">
+            {step === "credentials"
+              ? "Use your admin username and password."
+              : "Enter the 6-digit authenticator code."}
+          </p>
+
+          {step === "credentials" ? (
+            <form
+              onSubmit={loginForm.handleSubmit(onLogin)}
+              className="mt-10 space-y-5"
+            >
+              <Input
+                id="username"
+                label="Username"
+                autoComplete="username"
+                error={loginForm.formState.errors.username?.message}
+                {...loginForm.register("username")}
+              />
+              <Input
+                id="password"
+                label="Password"
+                type="password"
+                autoComplete="current-password"
+                error={loginForm.formState.errors.password?.message}
+                {...loginForm.register("password")}
+              />
+              {error && <p className="text-sm text-red-600">{error}</p>}
+              <Button
+                type="submit"
+                className="mt-1 h-12 w-full"
+                disabled={loginForm.formState.isSubmitting}
+              >
+                {loginForm.formState.isSubmitting ? "Signing in…" : "Continue"}
+              </Button>
+            </form>
+          ) : (
+            <form
+              onSubmit={totpForm.handleSubmit(onTotp)}
+              className="mt-10 space-y-5"
+            >
+              <Input
+                id="totp"
+                label="Authenticator code"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                error={totpForm.formState.errors.code?.message}
+                {...totpForm.register("code")}
+              />
+              {error && <p className="text-sm text-red-600">{error}</p>}
+              <Button type="submit" className="mt-1 h-12 w-full">
+                Continue
+              </Button>
+              <button
+                type="button"
+                onClick={() => {
+                  setStep("credentials");
+                  setError("");
+                }}
+                className="w-full text-center text-sm text-brown-mid transition-colors hover:text-brown-dark"
+              >
+                Back
+              </button>
+            </form>
+          )}
+        </div>
+      </main>
     </div>
   );
 }

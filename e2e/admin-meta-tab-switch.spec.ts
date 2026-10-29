@@ -1,7 +1,7 @@
 import { test, expect, type Page, type BrowserContext } from "@playwright/test";
 
 const ADMIN_USER = process.env.ADMIN_USER || "admin";
-const ADMIN_PASS = process.env.ADMIN_PASS || "admin123";
+const ADMIN_PASS = process.env.ADMIN_PASS;
 
 async function unwrapItems<T>(data: unknown): Promise<T[]> {
   if (Array.isArray(data)) return data as T[];
